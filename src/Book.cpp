@@ -17,7 +17,7 @@ using namespace LibraryBookSystem;
 
 // BaseBook 成员函数实现
 bool BB::match(const string &s) const {
-    // 重构判断逻辑，拆分条件表达式降低相似度
+   
     bool isBidMatch = (this->bid == s);
     bool isNameMatch = (this->bname == s);
     bool isAuthorMatch = (this->author == s);
@@ -26,14 +26,14 @@ bool BB::match(const string &s) const {
 }
 
 void BB::show() const {
-    // 调整输出格式的拼接方式，保留原有输出内容
+   
     cout << this->bid << "\t" << this->bname << "\t" << this->author 
          << "\t" << this->press << "\t" << this->totalNum 
          << "\t" << this->borrowNum << endl;
 }
 
 istream &operator>>(istream &in, BB &bb) {
-    // 分步读取数据，增加临时变量中转
+    // 分步读取数据，临时变量中转
     string tempBid, tempName, tempAuthor, tempPress;
     int tempTotal, tempBorrow;
     in >> tempBid >> tempName >> tempAuthor >> tempPress >> tempTotal >> tempBorrow;
@@ -47,7 +47,7 @@ istream &operator>>(istream &in, BB &bb) {
 }
 
 ostream &operator<<(ostream &out, const BB &bb) {
-    // 改用换行符拼接的逐行输出，保留原有输出内容
+    //用换行符拼接的逐行输出
     out << bb.bid << endl
         << bb.bname << endl
         << bb.author << endl
@@ -59,7 +59,7 @@ ostream &operator<<(ostream &out, const BB &bb) {
 
 // Book 成员函数实现
 void Book::addNum(const int &num) {
-    // 重构赋值逻辑，用临时变量中转
+    // 用临时变量中转
     int newTotal = this->totalNum + num;
     this->totalNum = newTotal;
 }
@@ -69,7 +69,7 @@ void Book::reqBorrow(const BH &bh) {
 }
 
 void Book::agrBorrow(const BH &bh) {
-    // 调整执行顺序的写法，功能不变
+    
     this->borrowReq.del(bh);
     int newBorrow = this->borrowNum + 1;
     this->borrowHis.add(bh);
