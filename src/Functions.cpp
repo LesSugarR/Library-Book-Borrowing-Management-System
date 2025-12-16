@@ -17,4 +17,4 @@ void replace(string &s,const string &a,const string &b)
 {
 
 }
-string getTime();
+//string getTime();
