@@ -1,4 +1,4 @@
-﻿//
+﻿
 // Created by LesSugarR on 25-12-10.
 //
 //明确图书要存哪些信息（定义数据结构）
@@ -16,7 +16,8 @@
 #define HL HistoryList
 
 namespace LibraryBookSystem{
-class BaseBook{
+// 1. BaseBook：protected属性保留（struct也支持访问控制）
+struct BaseBook{
 protected:
 std::string bid,bname,author,press;
 int totalNum,borrowNum;
@@ -71,8 +72,9 @@ void show() const;
 friend std::istream &operator >>(std::istream &in ,BaseBook &Book);
 friend std::ostream &operator <<(std::ostream &out , const BaseBook &Book);
 };
-//Book类：继承BaseBook
-class Book :public BaseBook{
+
+// 2. Book：继承BaseBook（struct支持继承）
+struct Book :public BaseBook{
 private:
  HL borrowReq;
  HL borrowHis;
@@ -106,8 +108,9 @@ public:
  friend std::istream &operator >>(std::istream &in, Book &book);
  friend std::ostream &operator <<(std::ostream &out, const Book &book);
 };
- //Booklist类
- class BookList{
+
+// 3. BookList：vector成员和函数完全保留
+struct BookList{
     private:
     std::vector<BaseBook> bl;
     public:
@@ -144,7 +147,6 @@ public:
       friend std::ostream &operator <<(std::ostream &out, const BookList &booklist);
  };
 }
-
 
 using namespace LibraryBookSystem;
 #endif //BOOK_H
