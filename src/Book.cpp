@@ -2,8 +2,8 @@
 // Created by LesSugarR on 25-12-10.
 //
 
-#include "Book.h"
-#include "History.h"
+#include "../include/Book.h"
+#include "../include/History.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -39,12 +39,12 @@ void BaseBook::show() const {
          << "\t" << this->getBorrowNum() << "\t" << this->getInTime() << endl;
 }
 
-// 修复：流读取参数数量匹配（适配实际输入，解决“参数太少”）
+// 流读取参数数量匹配（适配实际输入，解决“参数太少”）
 istream &operator>>(istream &in, BaseBook &bb) {
     string tempBid, tempName, tempAuthor, tempPress, tempInTime;
     int tempTotal, tempBorrow;
 
-    // 修复：按“ID 名称 作者 出版社 总数 借出数 时间”完整读取（确保参数数量）
+    // 按“ID 名称 作者 出版社 总数 借出数 时间”完整读取（确保参数数量）
     in >> tempBid >> tempName >> tempAuthor >> tempPress >> tempTotal >> tempBorrow >> tempInTime;
 
     // 数据合法性校验
@@ -293,4 +293,11 @@ ostream &operator<<(ostream &out, const BookList &booklist) {
         LibraryBookSystem::operator<<(out,booklist.getBookAt(i)); 
     }
     return out;
+}
+
+std::istream& operator>>(std::istream& in,LibraryBookSystem::BaseBook& bb){
+    return LibraryBookSystem::operator>>(in,bb);
+}
+std::ostream& operator>>(std::ostream& out,const LibraryBookSystem::BaseBook& bb){
+    return LibraryBookSystem::operator<<(out,bb);
 }
