@@ -9,11 +9,14 @@
 #define BH BaseHistory
 #define HL HistoryList
 using namespace std;
-//static string getTime() {
-//    static int counter = 0;
-//    return "T" + to_string(++counter); // 简单时间戳：T1, T2, T3...
-//}
+static string getTime() {
+    static int counter = 0;
+    return "T" + to_string(++counter); // 简单时间戳：T1, T2, T3...
+}
 //BaseHistory
+bool BH::match(const string &s) const {
+    return hid==s||bid==s||rid==s||bname==s||rname==s||note==s;
+}
 istream  &operator >>(istream &in,BaseHistory &bh){
     in>> bh.hid >> bh.bid >> bh.rid >> bh.bname >> bh.rname >> bh.note
       >> bh.brtime >> bh.btime >> bh.rrtime >> bh.rtime;
@@ -122,11 +125,36 @@ void HistoryList::add(const BaseHistory& bh) {
     }
     ++count;
 }
+void HistoryList::del(const BaseHistory &bh) {
+    del(bh.getHid());
+}
 
-void HistoryList::showAll() const {
+void HistoryList::del(const std::string &hid) {
+    BaseHistoryNode* curr = head;
+    BaseHistoryNode* prev = nullptr;
+
+    while (curr != nullptr) {
+        if (curr->data.getHid() == hid) {
+            if (prev == nullptr) { // 删除头节点
+                head = curr->next;
+                if (tail == curr) tail = nullptr;
+            } else {
+                prev->next = curr->next;
+                if (tail == curr) tail = prev;
+            }
+            delete curr;
+            --count;
+            return;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+}
+
+int HistoryList::showAll() const {
     if (head == nullptr) {
         std::cout << "暂无历史记录。" << std::endl;
-        return;
+        return 0;
     }
     std::cout << "编号  历史记录ID  读者ID  读者姓名  书籍ID  书籍名称  借书时间  还书时间  借阅状态" << std::endl;
     int idx = 1;
@@ -137,7 +165,29 @@ void HistoryList::showAll() const {
         curr = curr->next;
     }
 }
+void HistoryList::show(const string &hid) const{
+    if (head == nullptr) {
+        std::cout << "暂无历史记录。" << std::endl;
+        return;
+    }
 
+    BaseHistoryNode *curr=head;
+    while (curr != nullptr) {
+        if (curr->data.getHid()==hid){
+            std::cout<<"找到该历史记录"<<std::endl;
+            curr->data.display();
+            return;
+        }
+    }
+}
+string  HistoryList::show(const int &num) const{
+    BaseHistoryNode *cur=head;
+    for (int i = 0; i < num; ++i) {
+        cur=cur->next;
+    }
+    cur->data.display();
+    return cur->data.getHid();
+}
 BaseHistory* HistoryList::findByHid(const std::string& hid) {
     BaseHistoryNode* curr = head;
     while (curr != nullptr) {
@@ -149,6 +199,28 @@ BaseHistory* HistoryList::findByHid(const std::string& hid) {
     return nullptr;
 }
 
+void HistoryList::schHistory(const std::string &s) const {
+    if (head == nullptr) {
+        std::cout << "暂无历史记录。" << std::endl;
+        return;
+    }
+
+    std::cout << "编号  历史记录ID  读者ID  读者姓名  书籍ID  书籍名称  借书时间  还书时间  借阅状态" << std::endl;
+    BaseHistoryNode* curr = head;
+    int foundCount = 0;
+
+    while (curr != nullptr) {
+        if (curr->data.match(s)) {
+            std::cout << ++foundCount << ".  ";
+            curr->data.display();
+        }
+        curr = curr->next;
+    }
+
+    if (foundCount == 0) {
+        std::cout << "未找到相关历史记录。" << std::endl;
+    }
+}
 std::istream& operator>>(std::istream& in, HistoryList& hl) {
     int n;
     in >> n;

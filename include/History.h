@@ -45,6 +45,7 @@ public:
     string getRrtime() const { return rrtime; }
     string getRtime() const { return rtime; }
     void display() const;
+    bool match(const string &s) const;
     friend istream &operator >> (istream &in,BaseHistory &bh);
     friend ostream &operator << (ostream &out,const BaseHistory &bh);
 };
@@ -158,10 +159,15 @@ public:
     HistoryList& operator=(const HistoryList&) = delete;
     void clear();
     void add(const BaseHistory& bh);
-    void showAll() const;
+    void del(const BaseHistory &bh);
+    void del(const std::string &hid);
+    int showAll() const;
+    void show(const string &hid) const;
+    string show(const int &num) const;		//将hl[num]存储的信息输出到屏幕上,并返回其his
     BaseHistory* findByHid(const std::string& hid);
     int size() const { return count; }
-
+    //搜索功能
+    void schHistory(const std::string &s) const;
     friend std::istream& operator>>(std::istream& in, HistoryList& hl);
     friend std::ostream& operator<<(std::ostream& out, const HistoryList& hl);
 

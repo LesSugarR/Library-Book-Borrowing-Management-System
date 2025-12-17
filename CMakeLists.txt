@@ -6,7 +6,6 @@ file(GLOB source_files "src/*.cpp")
 
 add_executable(main ${source_files}
         include/History.h
-        include/Reader.h
         include/Library.h
         include/Menu.h
         include/Console.h)
