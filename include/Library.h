@@ -24,7 +24,6 @@ class Library{
     //异常处理+封装
     class Data{ 
     public:
-      
         BookList bl;             //关联book.h中booklist
         ReaderList rl;           //关联reader.h中readerlist
         HistoryList hl;          //借阅历史列表（存储所有已经审批的借还记录）

@@ -39,6 +39,7 @@ public:
     void reqBorrow(const BH &bh);
     void agrBorrow(const BH &bh);
     void canBorrow(const BH &bh);
+    void canReturn(const BH &bh);
     void reqReturn(const BH &bh);
     void refReturn(const BH &bh);
     int showBorrowReq() const ;
@@ -80,6 +81,7 @@ public:
     string show(const int &num) const;		//将rl[num]输出到屏幕上,并返回rid
     void show(const string &rid) const;
     void schReader(const string &s) const;
+    string getRname(const string &rd) const;
     friend istream &operator >> (istream &in,ReaderList &rl);
     friend ostream &operator << (ostream &out,const ReaderList &rl);
 };

@@ -8,4 +8,5 @@ add_executable(main ${source_files}
         include/History.h
         include/Library.h
         include/Menu.h
-        include/Console.h)
+        include/Console.h
+        src/Library.cpp)

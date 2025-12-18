@@ -19,13 +19,13 @@ protected:
     std::string press;
     int totalNum;
     int borrowNum;
-    std::string inTime;  
+    std::string inTime;
 
 public:
     // 构造函数
-    BaseBook(std::string _bid = "", std::string _bname = "", 
+    BaseBook(std::string _bid = "", std::string _bname = "",
              std::string _author = "", std::string _press = "",
-             int _totalNum = 0, int _borrowNum = 0, 
+             int _totalNum = 0, int _borrowNum = 0,
              std::string _inTime = "");
 
     // 获取当前时间
@@ -58,13 +58,13 @@ public:
 
     // 显示图书信息
     void show() const;
-}; 
+};
 
 // 图书链表节点
 struct BookNode {
     BaseBook data;
     BookNode* next;
-    
+
     BookNode(const BaseBook& book);
     BookNode();
 };
@@ -94,20 +94,20 @@ public:
     void remove(const std::string& bid);
     void remove(const BaseBook& book);
     void update(const BaseBook& book);
-    
+
     // 查询操作
     BaseBook& getByBid(const std::string& bid);
     const BaseBook& getByBid(const std::string& bid) const;
     BaseBook& getByIndex(int index);
     const BaseBook& getByIndex(int index) const;
-    
+
     // 显示和搜索
     void showAll() const;
     void search(const std::string& keyword) const;
-    
+
     // 排序
     void sortByInTime(bool ascending = true);
-    
+
     // 运算符重载
     BaseBook& operator[](const std::string& bid);
     BaseBook& operator[](int index);
