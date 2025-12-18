@@ -9,10 +9,10 @@
 #define BH BaseHistory
 #define HL HistoryList
 using namespace std;
-static string getTime() {
-    static int counter = 0;
-    return "T" + to_string(++counter); // 简单时间戳：T1, T2, T3...
-}
+//static string getTime() {
+//    static int counter = 0;
+//    return "T" + to_string(++counter); // 简单时间戳：T1, T2, T3...
+//}
 //BaseHistory
 bool BH::match(const string &s) const {
     return hid==s||bid==s||rid==s||bname==s||rname==s||note==s;

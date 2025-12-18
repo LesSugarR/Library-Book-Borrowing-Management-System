@@ -36,6 +36,10 @@ void Reader::agrBorrow(const BH &bh){
     borrowHis.add(bh);
     borrowNum++;
 }
+void Reader::canReturn(const BH &bh){
+    returnReq.del(bh);
+    borrowHis.add(bh);
+}
 void Reader::canBorrow(const BH &bh){
     borrowReq.del(bh);
     returnHis.add(bh);
@@ -182,6 +186,17 @@ void ReaderList::schReader(const std::string &s) const {
         curr = curr->next;
     }
 }
+// 在 ReaderList 类中添加
+string ReaderList::getRname(const string &rid) const {
+    BaseReaderNode* curr = head;
+    while (curr != nullptr) {
+        if (curr->data.getRid() == rid) {
+            return curr->data.getRname();
+        }
+        curr = curr->next;
+    }
+    return "";  // 返回空字符串表示未找到
+}
 // 流操作符重载
 std::istream &operator>>(std::istream &in, ReaderList &rl) {
     int num;
@@ -203,3 +218,4 @@ std::ostream &operator<<(std::ostream &out, const ReaderList &rl) {
     }
     return out;
 }
+
