@@ -19,7 +19,7 @@ protected:
     std::string press;
     int totalNum;
     int borrowNum;
-    std::string inTime;
+    std::string inTime;  
 
 public:
     // 构造函数
@@ -58,7 +58,7 @@ public:
 
     // 显示图书信息
     void show() const;
-};
+}; 
 
 // 图书链表节点
 struct BookNode {
@@ -79,8 +79,8 @@ private:
     // 辅助函数（私有）
     BookNode* getNodeAt(int index) const;
     BookNode* findPrevByBid(const std::string& bid) const;
-    BookNode* getNodeByBid(const std::string& bid) const;  
-    void clear();  
+    BookNode* getNodeByBid(const std::string& bid) const;
+    void clear();
 
 public:
     // 构造函数和析构函数
@@ -97,7 +97,9 @@ public:
     
     // 查询操作
     BaseBook& getByBid(const std::string& bid);
+    const BaseBook& getByBid(const std::string& bid) const;
     BaseBook& getByIndex(int index);
+    const BaseBook& getByIndex(int index) const;
     
     // 显示和搜索
     void showAll() const;
@@ -109,9 +111,6 @@ public:
     // 运算符重载
     BaseBook& operator[](const std::string& bid);
     BaseBook& operator[](int index);
-    //补充const 重载
-    const BaseBook& getByBid(const std::string& bid) const;
-    const BaseBook& getByIndex(int index) const;
     const BaseBook& operator[](const std::string& bid) const;
     const BaseBook& operator[](int index) const;
 };
