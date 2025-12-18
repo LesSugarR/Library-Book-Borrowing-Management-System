@@ -84,6 +84,7 @@ public:
     string getRname(const string &rd) const;
     friend istream &operator >> (istream &in,ReaderList &rl);
     friend ostream &operator << (ostream &out,const ReaderList &rl);
+    string getRname(const string &rid) const ;
 };
 #endif //READER_H
 
