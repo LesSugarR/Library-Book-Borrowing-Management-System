@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by LesSugarR on 25-12-10.
 //
 
@@ -13,6 +13,7 @@
 #include "../include/Console.h"
 #include <string>
 #include <vector>
+#include <fstream>
 #include <stdexcept>
 #include <ctime>
 
@@ -39,9 +40,25 @@ class Library{
         void outbr() const { con.outf("data/borrowReq",borrowReq); }
         void outrr() const { con.outf("data/returnReq",returnReq); }
 
+        //文件存在性检验，不存在则创建空文件
+        void checkFileExist(const string& filePath) const {
+            ifstream file(filePath);
+            if (!file.is_open()) {
+                ofstream newFile(filePath);
+                newFile.close();
+            }
+        }
+        
         //Data构造函数（程序启动时从文件加载数据到内存）
         Data(){ 
-            //调用Console的inf方法，从本地文件读取数据到对应列表（顺序与保存一致）
+            // 先校验所有数据文件
+            checkFileExist("data/bookls");
+            checkFileExist("data/readerls");
+            checkFileExist("data/historyls");
+            checkFileExist("data/borrowReq");
+            checkFileExist("data/returnReq");
+            checkFileExist("data/managerPasswd");
+            //再加载数据，调用Console的inf方法，从本地文件读取数据到对应列表（顺序与保存一致）
             con.inf("data/bookls",bl);            //加载图书
             con.inf("data/readerls",rl);          //加载读者
             con.inf("data/historyls",hl);         //加载历史记录
@@ -161,6 +178,17 @@ public:
 
     
     Library():op(Operation(&data)),mop(ManagerOperation(&data)),rop(ReaderOperation(&data)){}
+
+    // 析构函数，程序退出时自动保存所有数据
+    ~Library(){
+        data.outbl();
+        data.outrl();
+        data.outhl();
+        data.outbr();
+        data.outrr();
+        mop.outp();  // 同时保存管理员密码
+    }
+
 };
 
 #endif
