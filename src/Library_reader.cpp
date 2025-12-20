@@ -11,7 +11,6 @@
 #define LR Library::ReaderOperation
 #define BH BaseHistory
 using namespace std;
-using namespace LibraryBookSystem;  // 添加这行
 extern Console con;
 string LR::addHistory(const string &bid) const {
     string  hid=data->getHid();
@@ -19,7 +18,7 @@ string LR::addHistory(const string &bid) const {
     if (rname.empty()){
         return "";
     }
-    string  bname= data->bl[bid].getBname();
+    string  bname= data->bl.getBname(bid);
     if (bname.empty()){
         return "";
     }
@@ -99,7 +98,7 @@ void LR::canBorrow(const string &hid) {
     BaseHistory bh = h.getBase();
 
     //?
-    b.canBorrow();
+    b.BaseBook::canBorrow();
     con.outf(bp, b);
 
     r.canBorrow(bh);

@@ -1,193 +1,110 @@
-﻿//
-// Created by LesSugarR on 25-12-10.
-//
-// 存数据（图书、读者、借阅记录/申请），三类操作权限（所有人查、管理员增删、读者借还查自己），管数据存文件
-
-#ifndef LIBRARY_H
+﻿#ifndef LIBRARY_H
 #define LIBRARY_H
 
-#include "../include/Book.h"
-#include "../include/Reader.h"
-#include "../include/History.h"
-#include "../include/Console.h"
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <ctime>
+#include "Book.h"
+#include "Reader.h"
+#include "History.h"
+#include "Console.h"
+#include <bits/stdc++.h>
+using namespace std;
 
-// 全局控制台对象声明
+//Libray.h
 extern Console con;
-
-// 简化别名
-using Book = BaseBook;
-using BH = BaseHistory;
-
-// 图书馆核心管理类
-class Library {
-private:
-    class Data { 
+class Library{
+    class Data{
     public:
         BookList bl;
         ReaderList rl;
         HistoryList hl;
         HistoryList borrowReq;
         HistoryList returnReq;
-
-        // 生成历史记录ID
-        std::string getHid() const { 
-            return "His" + std::to_string(100000000 + hl.size()); 
+        string getHid() const { return "His"+to_string(100000000+hl.size()); }
+        void outbl() const { con.outf("data/bookls",bl); }
+        void outrl() const { con.outf("data/readerls",rl);}
+        void outhl() const { con.outf("data/historyls",hl); }
+        void outbr() const { con.outf("data/borrowReq",borrowReq); }
+        void outrr() const { con.outf("data/returnReq",returnReq); }
+        Data(){
+            con.inf("data/bookls",bl);
+            con.inf("data/readerls",rl);
+            con.inf("data/historyls",hl);
+            con.inf("data/borrowReq",borrowReq);
+            con.inf("data/returnReq",returnReq);
         }
-        
-        // 数据持久化
-        void outbl() const { con.outf("data/bookls", bl); }
-        void outrl() const { con.outf("data/readerls", rl); }
-        void outhl() const { con.outf("data/historyls", hl); }
-        void outbr() const { con.outf("data/borrowReq", borrowReq); }
-        void outrr() const { con.outf("data/returnReq", returnReq); }
-
-        // 构造函数
-        Data() { 
-            con.inf("data/bookls", bl);
-            con.inf("data/readerls", rl);
-            con.inf("data/historyls", hl);
-            con.inf("data/borrowReq", borrowReq);
-            con.inf("data/returnReq", returnReq);
-        }
-    } data;
-
+    }data;
 public:
-    // 公共操作类
-    class Operation {
-        Data* data; 
+    class Operation{
+        Data *data;
     public:
-        Operation(Data* _data) : data(_data) {}
-        
-        // 批量查询
+        Operation(Data *_data):data(_data){}
         int showBook() const;
         int showReader() const;
-        int showHistory() const;
-        
-        // 按序号查询
-        std::string showBook(int num) const;
-        std::string showReader(int num) const;
-        std::string showHistory(int num) const;
-       
-        // 按ID查询
-        void showBook(const std::string& bid) const;
-        void showReader(const std::string& rid) const;
-        void showHistory(const std::string& hid) const;
-        
-        // 搜索
-        void schBook(const std::string& s) const;
-        
-        // 存在性检查
-        bool bidExist(const std::string& bid) const;
-        bool ridExist(const std::string& rid) const;
-    } op;
-
-    // 管理员操作类
-    class ManagerOperation {
-        Data* data;
-        std::string mpasswd;
-        
+        int showHistory() const;		//将bl,rl,hl输出到屏幕上,并返回总数
+        string showBook(const int &num) const;
+        string showReader(const int &num) const;
+        string showHistory(const int &num) const;		//将特定序号的输出到屏幕上,并返回id
+        void showBook(const string &bid) const;
+        void showReader(const string &rid) const;
+        void showHistory(const string &hid) const;
+        void schBook(const string &s) const;
+        bool bidExist(const string &bid);
+        bool ridExist(const string &rid);
+    }op;
+    class ManagerOperation{
+        Data *data;
+        string mpasswd;
     public:
-        ManagerOperation(Data* _data) : data(_data) {
-            con.inf("data/managerPasswd", mpasswd);
+        ManagerOperation(Data *_data):data(_data){
+            con.inf("data/managerPasswd",mpasswd);
         }
-        
-        // 密码管理
-        void outp() const { con.outf("data/managerPasswd", mpasswd); }
-        
-        // 图书管理
-        void addBook(const std::string& bid, int num) const;
-        void addBook(const Book& b) const;
-        bool canDelb(const std::string& bid) const;
-        bool canDelb(int num) const;
-        void delBook(const std::string& bid) const;
-        
-        // 读者管理
-        void addReader(const Reader& r) const;
-        bool canDelr(const std::string& rid) const;
-        bool canDelr(int num) const;
-        void delReader(const std::string& rid) const;
-
-        //修改信息
-        void updateBookInfo(const std::string& bid, 
-        const std::string& newBname = "",
-        const std::string& newAuthor = "",
-        const std::string& newPress = "",
-        int newTotalNum = -1,
-        int newBorrowNum = -1) const;
-        
-        // 审批申请
-        void agrBorrow(const std::string& hid) const;
-        void agrReturn(const std::string& hid) const;
-        void refBorrow(const std::string& hid) const;
-        void refReturn(const std::string& hid) const;
-        
-        // 申请查询
+        void outp() const { con.outf("data/managerPasswd",mpasswd); }
+        void addBook(const string &bid,const int &num) const;
+        void addBook(const Book &b) const;
+        void addReader(const Reader &r) const;
+        bool canDelb(const string &bid) const;
+        bool canDelr(const string &rid) const;
+        bool canDelb(const int &num) const;
+        bool canDelr(const int &num) const;
+        void delBook(const string &bid) const;
+        void delReader(const string &rid) const;
+        void agrBorrow(const string &hid) const;
+        void agrReturn(const string &hid) const;
+        void refBorrow(const string &hid) const;
+        void refReturn(const string &hid) const;
         int showBorrowReq() const;
-        int showReturnReq() const;
-        std::string showBorrowReq(int num) const;
-        std::string showReturnReq(int num) const;
-       
-        // 权限校验
-        bool canBorrow(const std::string& hid) const;
-        bool mpasswdRight(const std::string& pwd) const { return mpasswd == pwd; }
-        void changeMpasswd(const std::string& pwd) { mpasswd = pwd; outp(); }
-        
-        // 高级搜索
-        void schReader(const std::string& s) const;
-        void schHistory(const std::string& s) const;
-    } mop;
-
-    // 读者操作类
-    class ReaderOperation {
-        Data* data;
-        std::string rid, rp;
+        int showReturnReq() const;		//将借还申请输出到屏幕上,并返回申请的总数
+        string showBorrowReq(const int &num) const;
+        string showReturnReq(const int &num) const;		//将特定序号的借还申请输出,并返回hid
+        bool canBorrow(const string &hid) const;
+        bool mpasswdRight(const string &_mpasswd) const { return mpasswd==_mpasswd; }
+        void changeMpasswd(const string &_mpasswd){ mpasswd=_mpasswd; outp(); }
+        void schReader(const string &s) const;
+        void schHistory(const string &s) const;
+    }mop;
+    class ReaderOperation{
+        Data *data;
+        string rid,rp;
         Reader r;
-        
+        string addHistory(const string &bid) const;		//由要借书的bid新建一个历史记录,并返回hid
     public:
-        ReaderOperation(Data* _data) : data(_data) {}
-        
-        // 身份管理
-        void setReader(const std::string& _rid);
-        
-        // 借还申请
-        void reqBorrow(const std::string& bid);
-        void canBorrow(const std::string& hid);
-        void reqReturn(const std::string& hid);
-        void canReturn(const std::string& hid);
-
-        // 个人记录查询
+        ReaderOperation(Data *_data):data(_data){}
+        void setReader(const string &_rid);
+        void reqBorrow(const string &bid);
+        void canBorrow(const string &hid);
+        void reqReturn(const string &hid);
+        void canReturn(const string &hid);
         int showBorrowHis() const;
         int showBorrowReq() const;
         int showReturnReq() const;
-        int showReturnHis() const;
-
-        // 按序号查询
-        std::string showBorrowReq(int num) const;
-        std::string showBorrowHis(int num) const;
-        std::string showReturnReq(int num) const;
-        std::string showReturnHis(int num) const;
-
-        // 密码管理
-        bool rpasswdRight(const std::string& rpasswd) const;
-        void changeRpasswd(const std::string& rpasswd);
-    } rop;
-    
-    // 构造函数
-    Library() : op(&data), mop(&data), rop(&data) {}
-    
-    // 析构函数
-    ~Library() {
-        data.outbl();
-        data.outrl();
-        data.outhl();
-        data.outbr();
-        data.outrr();
-        mop.outp();
-    }
+        int showReturnHis() const;		//将历史记录输出到屏幕上,并返回历史记录的数量
+        string showBorrowReq(const int &num) const;
+        string showBorrowHis(const int &num) const;
+        string showReturnReq(const int &num) const;
+        string showReturnHis(const int &num) const;		//将特定序号的历史记录输出,并返回hid
+        bool rpasswdRight(const string &rpasswd) const { return r.rpasswdRight(rpasswd); }
+        void changeRpasswd(const string &rpasswd);
+    }rop;
+    Library():op(Operation(&data)),mop(ManagerOperation(&data)),rop(ReaderOperation(&data)){}
 };
 
-#endif // LIBRARY_H
+#endif

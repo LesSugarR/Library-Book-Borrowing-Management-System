@@ -9,9 +9,8 @@
 //#include <cassert>
 //
 //using namespace std;
-//using namespace LibraryBookSystem;
 //
-//// 定义全局Console对象（确保在main.cpp中也有）
+////// 定义全局Console对象（确保在main.cpp中也有）
 //extern Console con;
 //
 //// 创建测试数据目录
@@ -308,7 +307,6 @@
 //// 主测试函数
 //int main() {
 //    cout << "=== 图书管理系统完整借还书测试 ===" << endl;
-//    cout << "开始时间: " << BaseBook::getCurrentTime() << endl;
 //
 //    try {
 //        // 设置测试环境
@@ -331,7 +329,6 @@
 //        cout << "1. ✓ 文件读写操作" << endl;
 //        cout << "2. ✓ 完整借还书流程" << endl;
 //        cout << "3. ✓ Library系统框架" << endl;
-//        cout << "\n结束时间: " << BaseBook::getCurrentTime() << endl;
 //
 //    } catch (const exception& e) {
 //        cerr << "\n!!! 主测试程序发生错误: " << e.what() << endl;
@@ -345,6 +342,258 @@
 //
 //        return 1;
 //    }
+//
+//    return 0;
+//}
+//using namespace std;
+//
+//Console con;
+//void initData() {
+//    cout << "正在初始化数据..." << endl;
+//
+//    // 创建必要的目录
+//    con.mkdir("data");
+//    con.mkdir("data/book");
+//    con.mkdir("data/reader");
+//    con.mkdir("data/history");
+//
+//    // 1. 初始化图书列表文件
+//    {
+//        ofstream bookls("data/bookls");
+//        if (!bookls) {
+//            cerr << "无法创建 data/bookls" << endl;
+//            return;
+//        }
+//        bookls << "0\n";  // 初始时没有图书
+//        bookls.close();
+//        cout << "✓ 创建图书列表文件" << endl;
+//    }
+//
+//    // 2. 初始化读者列表文件
+//    {
+//        ofstream readerls("data/readerls");
+//        if (!readerls) {
+//            cerr << "无法创建 data/readerls" << endl;
+//            return;
+//        }
+//        readerls << "0\n";  // 初始时没有读者
+//        readerls.close();
+//        cout << "✓ 创建读者列表文件" << endl;
+//    }
+//
+//    // 3. 初始化历史记录列表文件
+//    {
+//        ofstream historyls("data/historyls");
+//        if (!historyls) {
+//            cerr << "无法创建 data/historyls" << endl;
+//            return;
+//        }
+//        historyls << "0\n";  // 初始时没有历史记录
+//        historyls.close();
+//        cout << "✓ 创建历史记录列表文件" << endl;
+//    }
+//
+//    // 4. 初始化借阅请求文件
+//    {
+//        ofstream borrowReq("data/borrowReq");
+//        if (!borrowReq) {
+//            cerr << "无法创建 data/borrowReq" << endl;
+//            return;
+//        }
+//        borrowReq << "0\n";
+//        borrowReq.close();
+//        cout << "✓ 创建借阅请求文件" << endl;
+//    }
+//
+//    // 5. 初始化归还请求文件
+//    {
+//        ofstream returnReq("data/returnReq");
+//        if (!returnReq) {
+//            cerr << "无法创建 data/returnReq" << endl;
+//            return;
+//        }
+//        returnReq << "0\n";
+//        returnReq.close();
+//        cout << "✓ 创建归还请求文件" << endl;
+//    }
+//
+//    // 6. 初始化管理员密码文件
+//    {
+//        ofstream managerPasswd("data/managerPasswd");
+//        if (!managerPasswd) {
+//            cerr << "无法创建 data/managerPasswd" << endl;
+//            return;
+//        }
+//        managerPasswd << "admin\n";  // 默认密码
+//        managerPasswd.close();
+//        cout << "✓ 创建管理员密码文件 (默认密码: admin)" << endl;
+//    }
+//
+//    // 7. 创建一些示例图书目录结构
+//    con.mkdir("data/book/B0/00");
+//    con.mkdir("data/book/B0/01");
+//    con.mkdir("data/book/B1/00");
+//
+//    // 8. 创建一些示例读者目录结构
+//    con.mkdir("data/reader/R0/00");
+//    con.mkdir("data/reader/R0/01");
+//    con.mkdir("data/reader/R1/00");
+//
+//    // 9. 创建一些示例历史记录目录结构
+//    con.mkdir("data/history/00/00");
+//    con.mkdir("data/history/00/01");
+//
+//    cout << "\n✅ 数据初始化完成！" << endl;
+//    cout << "现在可以运行主程序了。" << endl;
+//}
+
+//int main() {
+//    initData();
+//    return 0;
+//}
+// 测试函数
+//void testLibraryManager() {
+//    cout << "=== 测试图书馆管理系统 ===" << endl;
+//
+//    // 创建图书馆实例
+//    Library library;
+//
+//    try {
+//        // 测试1: 添加图书
+//        cout << "\n1. 测试添加图书..." << endl;
+//        Book book1("B001", "C++ Primer", "Stanley Lippman", "Addison-Wesley", 10, 0);
+//        library.mop.addBook(book1);
+//        cout << "   添加图书成功: " << book1.getBname() << endl;
+//
+//        Book book2("B002", "Effective C++", "Scott Meyers", "Addison-Wesley", 5, 0);
+//        library.mop.addBook(book2);
+//        cout << "   添加图书成功: " << book2.getBname() << endl;
+//
+//        // 测试2: 增加库存
+//        cout << "\n2. 测试增加库存..." << endl;
+//        library.mop.addBook("B001", 5);
+//        cout << "   增加库存成功: B001 +5" << endl;
+//
+//        // 测试3: 检查是否可以删除
+//        cout << "\n3. 测试检查是否可以删除..." << endl;
+//        bool canDelB1 = library.mop.canDelb("B001");
+//        cout << "   图书B001是否可以删除: " << (canDelB1 ? "是" : "否") << endl;
+//
+//        bool canDelB2 = library.mop.canDelb(1);
+//        cout << "   第二本图书是否可以删除: " << (canDelB2 ? "是" : "否") << endl;
+//
+//        // 测试4: 添加读者
+//        cout << "\n4. 测试添加读者..." << endl;
+//        Reader reader1("R001", "张三", "123456", 0);
+//        library.mop.addReader(reader1);
+//        cout << "   添加读者成功: " << reader1.getRname() << endl;
+//
+//        Reader reader2("R002", "李四", "654321", 0);
+//        library.mop.addReader(reader2);
+//        cout << "   添加读者成功: " << reader2.getRname() << endl;
+//
+//        // 测试5: 显示图书
+//        cout << "\n5. 测试显示所有图书..." << endl;
+//        int bookCount = library.op.showBook();
+//        cout << "   图书总数: " << bookCount << endl;
+//
+//        // 测试6: 显示读者
+//        cout << "\n6. 测试显示所有读者..." << endl;
+//        int readerCount = library.op.showReader();
+//        cout << "   读者总数: " << readerCount << endl;
+//
+////        // 测试7: 搜索图书
+////        cout << "\n7. 测试搜索图书..." << endl;
+////        library.mop.sch("C++");
+////        cout << "   搜索'C++'完成" << endl;
+//
+//        // 测试8: 搜索读者
+//        cout << "\n8. 测试搜索读者..." << endl;
+//        library.mop.schReader("张");
+//        cout << "   搜索'张'完成" << endl;
+//
+//        // 测试9: 删除图书（如果可删除）
+//        cout << "\n9. 测试删除图书..." << endl;
+//        if (canDelB2) {
+//            library.mop.delBook("B002");
+//            cout << "   删除图书B002成功" << endl;
+//        } else {
+//            cout << "   图书B002不可删除（可能有借阅记录）" << endl;
+//        }
+//
+//        // 测试10: 显示请求列表（应为空，因为没有借阅请求）
+//        cout << "\n10. 测试显示借阅请求..." << endl;
+//        int borrowReqCount = library.mop.showBorrowReq();
+//        cout << "   借阅请求数量: " << borrowReqCount << endl;
+//
+//        // 测试异常处理
+//        cout << "\n11. 测试异常处理..." << endl;
+//        try {
+//            library.mop.addBook("B999", 10);  // 不存在的图书
+//            cout << "   ❌ 未抛出异常 - 测试失败" << endl;
+//        } catch (const runtime_error& e) {
+//            cout << "   ✅ 异常捕获成功: " << e.what() << endl;
+//        }
+//
+//        // 测试12: 密码管理
+//        cout << "\n12. 测试密码管理..." << endl;
+//        library.mop.changeMpasswd("admin123");
+//        bool passwordCorrect = library.mop.mpasswdRight("admin123");
+//        cout << "   密码验证结果: " << (passwordCorrect ? "正确" : "错误") << endl;
+//
+//        cout << "\n=== 所有测试完成 ===" << endl;
+//
+//    } catch (const exception& e) {
+//        cerr << "\n❌ 测试过程中发生错误: " << e.what() << endl;
+//    }
+//}
+//
+//// 测试借阅流程
+//void testBorrowProcess() {
+//    cout << "\n=== 测试借阅流程 ===" << endl;
+//
+//    Library library;
+//
+//    try {
+//        // 准备数据
+//        Book book("B100", "Test Book", "Test Author", "Test Press", 3, 0);
+//        library.mop.addBook(book);
+//
+//        Reader reader("R100", "Test Reader", "password", 0);
+//        library.mop.addReader(reader);
+//
+//        cout << "1. 图书和读者已添加" << endl;
+//
+//        // 显示当前状态
+//        cout << "2. 当前图书列表:" << endl;
+//        library.op.showBook();
+//
+//        cout << "\n3. 当前读者列表:" << endl;
+//        library.op.showReader();
+//
+//        // 检查是否可以借阅
+//        cout << "\n4. 图书可借阅数量: " << endl;
+//        library.op.showBook("B100");
+//
+//    } catch (const exception& e) {
+//        cerr << "❌ 测试过程中发生错误: " << e.what() << endl;
+//    }
+//}
+//
+//int main() {
+//    cout << "开始测试图书馆管理系统..." << endl;
+//
+//    // 设置数据目录
+//    con.setDataDir("test_data");
+//
+//    // 运行测试
+//    testLibraryManager();
+//
+//    // 测试借阅流程
+//    testBorrowProcess();
+//
+//    cout << "\n测试完成！" << endl;
+//    cout << "请检查 test_data 目录下的文件是否正确生成" << endl;
 //
 //    return 0;
 //}

@@ -13,11 +13,8 @@ private:
 public:
     // 构造函数，初始化data目录
     Console() {
-        // 默认将data目录放在当前目录下
+        // 默认将data目录放在当前目录下,目录有问题，后续需要修改
         dataDir = "data";
-
-        // 或者可以设置为构建目录下的data
-        // dataDir = "cmake-build-debug-mingw/data";
     }
 
     // 设置data目录路径
@@ -37,6 +34,8 @@ public:
     std::string bdir(const std::string& bid) const;
     std::string hdir(const std::string& hid) const;
     void mkdir(const std::string& path) const;
+    void rmdir(const std::string& path) const;  // 添加这个声明
+
 
     // 文件操作模板函数
     template <class T>

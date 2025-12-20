@@ -171,6 +171,9 @@ public:
     friend std::istream& operator>>(std::istream& in, HistoryList& hl);
     friend std::ostream& operator<<(std::ostream& out, const HistoryList& hl);
 
+    BaseHistory getByHid(const string &basicString);
+
+    BaseHistoryNode *findNode(const string &basicString);
 };
 
 #endif //HISTORY_H

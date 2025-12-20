@@ -42,3 +42,24 @@ void Console::mkdir(const std::string& path) const {
     } while (pos != std::string::npos);
     */
 }
+// 添加 rmdir 函数的实现
+void Console::rmdir(const std::string& path) const {
+    namespace fs = std::filesystem;
+
+    try {
+        if (fs::exists(path)) {
+            // 如果路径存在且是目录，则删除整个目录（包括子目录和文件）
+            if (fs::is_directory(path)) {
+                fs::remove_all(path);
+            } else {
+                // 如果是文件，直接删除
+                fs::remove(path);
+            }
+        } else {
+            // 路径不存在，可能是正常的（比如已经删除过了）
+            // 可以选择什么都不做，或者记录日志
+        }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("删除目录失败: " + path + " - " + e.what());
+    }
+}

@@ -1,124 +1,101 @@
-﻿// Created by LesSugarR on 25-12-10.
-//
-//明确图书要存哪些信息（定义数据结构）
-
-
-#ifndef BOOK_H
+﻿#ifndef BOOK_H
 #define BOOK_H
 
-#include <string>
+#include "History.h"
+#include <bits/stdc++.h>
+#define BH BaseHistory
+#define HL HistoryList
+using namespace std;
 
-namespace LibraryBookSystem {
-
-// 基础图书结构体
-struct BaseBook {
+//Book.h
+class BaseBook{
 protected:
-    std::string bid;
-    std::string bname;
-    std::string author;
-    std::string press;
-    int totalNum;
-    int borrowNum;
-    std::string inTime;
-
+    string bid,bname,author,press;
+    int totalNum,borrowNum;
 public:
-    // 构造函数
-    BaseBook(std::string _bid = "", std::string _bname = "",
-             std::string _author = "", std::string _press = "",
-             int _totalNum = 0, int _borrowNum = 0,
-             std::string _inTime = "");
-
-    // 获取当前时间
-    static std::string getCurrentTime();
-
-    // Getter函数
-    std::string getBid() const;
-    std::string getBname() const;
-    std::string getAuthor() const;
-    std::string getPress() const;
-    int getTotalNum() const;
-    int getBorrowNum() const;
-    std::string getInTime() const;
-
-    // Setter函数
-    void setBid(const std::string& id);
-    void setBname(const std::string& name);
-    void setAuthor(const std::string& auth);
-    void setPress(const std::string& p);
-    void setTotalNum(int num);
-    void setBorrowNum(int num);
-    void setInTime(const std::string& time);
-
-    // 判断函数
-    bool canBorrow() const;
-    bool canDelete() const;
-
-    // 匹配函数
-    bool match(const std::string& keyword) const;
-
-    // 显示图书信息
-    void show() const;
+    BaseBook(string _bid, string _bname,string _author,string _press,int _totalNum,int _borrowNum=0)
+            :bid(_bid),bname(_bname),author(_author),press(_press),totalNum(_totalNum),borrowNum(_borrowNum){}
+    BaseBook(){}
+    string getBid() const { return bid; }
+    string getBname() const { return bname; }
+    string getAuthor() const { return author; }
+    string getPress() const { return press; }
+    int getBorrowNum() const { return borrowNum; }
+    int getTotalNum() const { return totalNum; }
+    bool canBorrow() const { return totalNum-borrowNum>0; }
+    bool canDel() const { return borrowNum==0; }
+    bool match(const string &s) const;
+    void show() const;		//将BaseBook对象存储的信息输出到屏幕上
+    friend istream &operator >> (istream &in,BaseBook &bb);
+    friend ostream &operator << (ostream &out,const BaseBook &bb);
 };
 
-// 图书链表节点
-struct BookNode {
-    BaseBook data;
-    BookNode* next;
-
-    BookNode(const BaseBook& book);
-    BookNode();
+class Book : public BaseBook{
+    HL borrowReq;
+    HL borrowHis;
+    HL returnReq;
+    HL returnHis;
+public:
+    using BaseBook::BaseBook;
+    BaseBook getBase() const { return BaseBook(bid,bname,author,press,totalNum,borrowNum); }
+    void addNum(const int &num);
+    void reqBorrow(const BH &bh);
+    void agrBorrow(const BH &bh);
+    void canBorrow(const BH &bh);
+    void refBorrow(const BH &bh);
+    void reqReturn(const BH &bh);
+    void agrReturn(const BH &bh);
+    void canReturn(const BH &bh);
+    void refReturn(const BH &bh);
+    int showBorrowReq() const;
+    int showBorrowHis() const;
+    int showReturnReq() const;
+    int showReturnHis() const;		//将Reader的相关历史记录输出到屏幕上并返回相应历史记录的数量
+    friend ostream &operator << (ostream &out,const Book &b);
 };
 
-// 图书链表管理类
+// BookList 类的声明
 class BookList {
 private:
+    // 链表节点结构
+    struct BookNode {
+        BaseBook data;
+        BookNode* next;
+
+        BookNode(const BaseBook& book);
+    };
+
     BookNode* head;
     BookNode* tail;
-    int size;
+    int count;
 
-    // 辅助函数（私有）
-    BookNode* getNodeAt(int index) const;
-    BookNode* findPrevByBid(const std::string& bid) const;
-    BookNode* getNodeByBid(const std::string& bid) const;
+    // 私有辅助函数
+    BookNode* findNode(const string& bid) const;
+    BookNode* findNode(int index) const;
     void clear();
 
 public:
-    // 构造函数和析构函数
     BookList();
     ~BookList();
+    BookList(const BookList& other);
+    BookList& operator=(const BookList& other);
 
-    // 基本操作
-    int getSize() const;
-    bool bidExists(const std::string& bid) const;
-    void add(const BaseBook& book);
-    void remove(const std::string& bid);
-    void remove(const BaseBook& book);
-    void update(const BaseBook& book);
-
-    // 查询操作
-    BaseBook& getByBid(const std::string& bid);
-    const BaseBook& getByBid(const std::string& bid) const;
+    BaseBook& getByBid(const string& bid);
     BaseBook& getByIndex(int index);
-    const BaseBook& getByIndex(int index) const;
+    int size() const { return count; }
+    bool bidExist(const string& bid) const;
+    void add(const BaseBook &bb);
+    void del(const BaseBook &bb);
+    void del(const string &bid);
+    int show() const;
+    string show(const int &num) const;
+    void show(const string &bid) const;
+    void schBook(const string &s) const;
 
-    // 显示和搜索
-    void showAll() const;
-    void search(const std::string& keyword) const;
+    friend istream &operator >> (istream &in, BookList &bl);
+    friend ostream &operator << (ostream &out, const BookList &bl);
 
-    // 排序
-    void sortByInTime(bool ascending = true);
-
-    // 运算符重载
-    BaseBook& operator[](const std::string& bid);
-    BaseBook& operator[](int index);
-    const BaseBook& operator[](const std::string& bid) const;
-    const BaseBook& operator[](int index) const;
+    string getBname(const string &bid);
 };
 
-// 输入输出运算符声明
-std::istream& operator>>(std::istream& in, BaseBook& book);
-std::ostream& operator<<(std::ostream& out, const BaseBook& book);
-
-} // namespace LibraryBookSystem
-
-#endif // BOOK_H
+#endif

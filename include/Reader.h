@@ -22,6 +22,8 @@ public:
     void show() const;		//将BaseReader存储的信息输出到屏幕上
     friend istream &operator >> (istream &in,BaseReader &br);
     friend ostream &operator << (ostream &out,const BaseReader &br);
+
+    bool canDel();
 };
 class Reader : public BaseReader {
     string rpasswd;
@@ -41,6 +43,8 @@ public:
     void canBorrow(const BH &bh);
     void canReturn(const BH &bh);
     void reqReturn(const BH &bh);
+    void refBorrow(const BH &bh);
+    void agrReturn(const BH &bh);
     void refReturn(const BH &bh);
     int showBorrowReq() const ;
     int showBorrowHis() const ;
@@ -52,6 +56,7 @@ public:
     string showReturnHis(const int &num) const ;		//将特点序号的历史记录输出到屏幕上,并返回hid
     friend istream &operator >> (istream &in,Reader &r);
     friend ostream &operator << (ostream &out,const Reader &r);
+
 };
 class ReaderList{
     struct BaseReaderNode{
@@ -81,10 +86,13 @@ public:
     string show(const int &num) const;		//将rl[num]输出到屏幕上,并返回rid
     void show(const string &rid) const;
     void schReader(const string &s) const;
-    string getRname(const string &rd) const;
     friend istream &operator >> (istream &in,ReaderList &rl);
     friend ostream &operator << (ostream &out,const ReaderList &rl);
     string getRname(const string &rid) const ;
+
+    BaseReader &getByRid(const string &basicString);
+    BaseReader &getByIndex(const int &i);
+    BaseReaderNode *findNode(const string &basicString);
 };
 #endif //READER_H
 
