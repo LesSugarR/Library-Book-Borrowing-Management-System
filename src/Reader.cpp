@@ -23,6 +23,11 @@ ostream &operator << (ostream &out,const BR &br){
     out<< br.rid << "\n" << br.rname << "\n" << br.borrowNum << endl;
     return out;
 }
+
+bool BaseReader::canDel() {
+    return borrowNum == 0;
+}
+
 //Reader:
 void Reader::reqBorrow(const BH &bh){
     borrowReq.add(bh);
@@ -31,10 +36,23 @@ void Reader::reqReturn(const BH &bh){
     borrowHis.del(bh);
     returnReq.add(bh);
 }
+void Reader::refBorrow(const BH &bh){
+    borrowReq.del(bh);
+    returnHis.add(bh);
+}
+void Reader::agrReturn(const BH &bh){
+    returnReq.del(bh);
+    returnHis.add(bh);
+    borrowNum--;
+}
 void Reader::agrBorrow(const BH &bh){
     borrowReq.del(bh);
     borrowHis.add(bh);
     borrowNum++;
+}
+void Reader::canReturn(const BH &bh){
+    returnReq.del(bh);
+    borrowHis.add(bh);
 }
 void Reader::canBorrow(const BH &bh){
     borrowReq.del(bh);
@@ -77,6 +95,8 @@ ostream &operator << (ostream &out,const Reader &r){
        << r.borrowReq << r.borrowHis << r.returnReq << r.returnHis << endl;
     return out;
 }
+
+
 void ReaderList::clear() {
     while (head != nullptr) {
         BaseReaderNode* temp = head;
@@ -182,6 +202,17 @@ void ReaderList::schReader(const std::string &s) const {
         curr = curr->next;
     }
 }
+// 在 ReaderList 类中添加
+string ReaderList::getRname(const string &rid) const {
+    BaseReaderNode* curr = head;
+    while (curr != nullptr) {
+        if (curr->data.getRid() == rid) {
+            return curr->data.getRname();
+        }
+        curr = curr->next;
+    }
+    return "";  // 返回空字符串表示未找到
+}
 // 流操作符重载
 std::istream &operator>>(std::istream &in, ReaderList &rl) {
     int num;
@@ -203,3 +234,41 @@ std::ostream &operator<<(std::ostream &out, const ReaderList &rl) {
     }
     return out;
 }
+
+BaseReader &ReaderList::getByRid(const string &rid) {
+    // 在链表中查找指定 rid 的节点
+    BaseReaderNode* node =findNode(rid);  // 需要实现 findNode 方法
+    if (node == nullptr) {
+        throw runtime_error("该节点不存在");
+    }
+    return node->data;
+}
+
+BaseReader &ReaderList::getByIndex(const int &index) {
+    if (index < 0 || index >= count) {
+        throw out_of_range("不符合范围: " + to_string(index));
+    }
+
+    BaseReaderNode* current = head;
+    for (int i = 0; i < index && current != nullptr; i++) {
+        current = current->next;
+    }
+
+    if (current == nullptr) {
+        throw runtime_error("该读者无法找到: " + to_string(index));
+    }
+
+    return current->data;
+}
+
+ReaderList::BaseReaderNode *ReaderList::findNode(const string &rid) {
+    BaseReaderNode* current = head;
+    while (current != nullptr) {
+        if (current->data.getRid() == rid) {
+            return current;
+        }
+        current = current->next;
+    }
+    return nullptr;  // 没找到返回 nullptr
+}
+

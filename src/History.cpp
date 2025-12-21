@@ -32,7 +32,6 @@ void BH::display() const {
     cout<< hid << "  " << rid << "  " << rname << "  " << bid << "  " << bname << "  "
         << btime << "  " << rtime << "  " << note << endl;
 }
-
 //History::Record
 istream &operator >> (istream &in,History::Record &hr){
     in>> hr.time >> hr.note;
@@ -240,4 +239,23 @@ std::ostream& operator<<(std::ostream& out, const HistoryList& hl) {
         curr = curr->next;
     }
     return out;
+}
+
+BaseHistory HistoryList::getByHid(const string &hid) {
+    BaseHistoryNode* node = findNode(hid);  // 需要实现 findNode 方法
+    if (node == nullptr) {
+        throw runtime_error("历史记录中不存在该id: " + hid);
+    }
+    return node->data;
+}
+
+HistoryList::BaseHistoryNode *HistoryList::findNode(const string &hid) {
+    BaseHistoryNode* current = head;
+    while (current != nullptr) {
+        if (current->data.getHid() == hid) {
+            return current;
+        }
+        current = current->next;
+    }
+    return nullptr;
 }

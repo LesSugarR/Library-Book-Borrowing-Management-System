@@ -1,303 +1,290 @@
-﻿//
-// Created by LesSugarR on 25-12-10.
-//
+﻿#include "../include/Book.h"
 
-#include "../include/Book.h"
-#include "../include/History.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <ctime>
-#include <algorithm>
-#include <sstream>
-
-using namespace std;
-using namespace LibraryBookSystem;
-
-// 时间比较函数
-bool compareInTimeAsc(const BaseBook &a, const BaseBook &b) {
-    return a.getInTime() < b.getInTime();
-}
-bool compareInTimeDesc(const BaseBook &a, const BaseBook &b) {
-    return a.getInTime() > b.getInTime();
-}
 
 // BaseBook 成员函数实现
 bool BaseBook::match(const string &s) const {
-    bool isBidMatch = (this->getBid() == s);
-    bool isNameMatch = (this->getBname() == s);
-    bool isAuthorMatch = (this->getAuthor() == s);
-    bool isPressMatch = (this->getPress() == s);
-    bool isTimeMatch = (this->getInTime() == s);
-    return isBidMatch || isNameMatch || isAuthorMatch || isPressMatch || isTimeMatch;
+    return bid==s||bname==s||author==s||press==s;
 }
-
 void BaseBook::show() const {
-    cout << this->getBid() << "\t" << this->getBname() << "\t" << this->getAuthor()
-         << "\t" << this->getPress() << "\t" << this->getTotalNum()
-         << "\t" << this->getBorrowNum() << "\t" << this->getInTime() << endl;
+    cout << bid << "  " << bname << "  " << author << "  " << press << "  " << totalNum << "  " << borrowNum;
 }
-
-// 流读取参数数量匹配（适配实际输入，解决“参数太少”）
-istream &operator>>(istream &in, BaseBook &bb) {
-    string tempBid, tempName, tempAuthor, tempPress, tempInTime;
-    int tempTotal, tempBorrow;
-
-    // 按“ID 名称 作者 出版社 总数 借出数 时间”完整读取（确保参数数量）
-    in >> tempBid >> tempName >> tempAuthor >> tempPress >> tempTotal >> tempBorrow >> tempInTime;
-
-    // 数据合法性校验
-    if (tempBid.empty()) throw runtime_error("书籍ID不能为空！");
-    if (tempTotal < 0 || tempBorrow < 0) throw runtime_error("书籍数量不能为负数！");
-    if (tempBorrow > tempTotal) throw runtime_error("借出数量不能超过总数量！");
-
-    // Setter赋值
-    bb.setBid(tempBid);
-    bb.setBname(tempName);
-    bb.setAuthor(tempAuthor);
-    bb.setPress(tempPress);
-    bb.setTotalNum(tempTotal);
-    bb.setBorrowNum(tempBorrow);
-    bb.setInTime(tempInTime.empty() ? BaseBook::getCurrentTime() : tempInTime);
-
+istream &operator >> (istream &in, BaseBook &bb){
+    in >> bb.bid >> bb.bname >> bb.author >> bb.press >> bb.totalNum >> bb.borrowNum;
     return in;
 }
-
-ostream &operator<<(ostream &out, const BaseBook &bb) {
-    out << bb.getBid() << endl
-        << bb.getBname() << endl
-        << bb.getAuthor() << endl
-        << bb.getPress() << endl
-        << bb.getTotalNum() << endl
-        << bb.getBorrowNum() << endl
-        << bb.getInTime() << endl;
+ostream &operator << (ostream &out, const BaseBook &bb){
+    out << bb.bid << "\n" << bb.bname << "\n" << bb.author << "\n" << bb.press << "\n" << bb.totalNum << "\n" << bb.borrowNum << endl;
     return out;
 }
 
 // Book 成员函数实现
-void Book::addNum(const int &num) {
-    if (num < 0) throw runtime_error("添加数量不能为负数！");
-    this->setTotalNum(this->getTotalNum() + num);
+void Book::addNum(const int &num){
+    totalNum+=num;
 }
-
-void Book::reqBorrow(const ::BaseHistory &bh) {
-    this->borrowReq.add(bh);
+void Book::reqBorrow(const BH &bh){
+    borrowReq.add(bh);
 }
-
-//bool表达式正常（基类canBorrow()返回bool，无冲突）
-void Book::agrBorrow(const ::BaseHistory &bh) {
-    // 正确识别基类的bool canBorrow()
-    if (!this->BaseBook::canBorrow()) { 
-        throw runtime_error("书籍库存不足，无法借阅！");
-    }
-    this->setBorrowNum(this->getBorrowNum() + 1);
-    this->borrowHis.add(bh);
+void Book::agrBorrow(const BH &bh){
+    borrowReq.del(bh);
+    borrowHis.add(bh);
+    borrowNum++;
 }
-
-// 函数名改为cancelBorrow，避免与基类冲突
-void Book::cancelBorrow(const ::BaseHistory &bh) {
-    this->returnHis.add(bh);
+void Book::canBorrow(const BH &bh){
+    borrowReq.del(bh);
+    returnHis.add(bh);
 }
-
-void Book::refBorrow(const ::BaseHistory &bh) {
-    this->returnHis.add(bh);
+void Book::refBorrow(const BH &bh){
+    borrowReq.del(bh);
+    returnHis.add(bh);
 }
-
-void Book::reqReturn(const ::BaseHistory &bh) {
-    this->returnReq.add(bh);
+void Book::reqReturn(const BH &bh){
+    borrowHis.del(bh);
+    returnReq.add(bh);
 }
-
-void Book::agrReturn(const ::BaseHistory &bh) {
-    if (this->getBorrowNum() - 1 < 0) throw runtime_error("借出数量异常，无法还书！");
-    this->setBorrowNum(this->getBorrowNum() - 1);
-    this->returnHis.add(bh);
+void Book::agrReturn(const BH &bh){
+    returnReq.del(bh);
+    returnHis.add(bh);
+    borrowNum--;
 }
-
-void Book::canReturn(const ::BaseHistory &bh) {
-    this->borrowHis.add(bh);
+void Book::canReturn(const BH &bh){
+    returnReq.del(bh);
+    borrowHis.add(bh);
 }
-
-void Book::refReturn(const ::BaseHistory &bh) {
-    this->borrowHis.add(bh);
+void Book::refReturn(const BH &bh){
+    returnReq.del(bh);
+    borrowHis.add(bh);
 }
-
 int Book::showBorrowReq() const {
-    return this->borrowReq.size();
+    return borrowReq.showAll();
 }
-
 int Book::showBorrowHis() const {
-    return this->borrowHis.size();
+    return borrowHis.showAll();
 }
-
 int Book::showReturnReq() const {
-    return this->returnReq.size();
+    return returnReq.showAll();
 }
-
 int Book::showReturnHis() const {
-    return this->returnHis.size();
+    return returnHis.showAll();
 }
-
-string Book::showBorrowReq(const int &num) const {
-    return "BorrowReq_" + to_string(num);
-}
-
-string Book::showBorrowHis(const int &num) const {
-    return "BorrowHis_" + to_string(num);
-}
-
-string Book::showReturnReq(const int &num) const {
-    return "ReturnReq_" + to_string(num);
-}
-
-string Book::showReturnHis(const int &num) const {
-    return "ReturnHis_" + to_string(num);
-}
-
-// Book流提取：参数读取原本这处有问题，后修改
-istream &operator>>(istream &in, Book &b) {
-    string tempBid, tempName, tempAuthor, tempPress, tempInTime;
-    int tempTotal, tempBorrow;
-
-    in >> tempBid >> tempName >> tempAuthor >> tempPress >> tempTotal >> tempBorrow >> tempInTime;
-
-    if (tempBid.empty()) throw runtime_error("书籍ID不能为空！");
-    if (tempTotal < 0 || tempBorrow < 0 || tempBorrow > tempTotal) {
-        throw runtime_error("书籍数量输入异常！");
-    }
-
-    b.setBid(tempBid);
-    b.setBname(tempName);
-    b.setAuthor(tempAuthor);
-    b.setPress(tempPress);
-    b.setTotalNum(tempTotal);
-    b.setBorrowNum(tempBorrow);
-    b.setInTime(tempInTime);
-
-    return in;
-}
-
-ostream &operator<<(ostream &out, const Book &b) {
-    out << b.getBid() << endl
-        << b.getBname() << endl
-        << b.getAuthor() << endl
-        << b.getPress() << endl
-        << b.getTotalNum() << endl
-        << b.getBorrowNum() << endl
-        << b.getInTime() << endl;
+ostream &operator << (ostream &out, const Book &b){
+    out << b.bid << "\n" << b.bname << "\n" << b.author << "\n" << b.press << "\n" << b.totalNum << "\n" << b.borrowNum << endl;
+    out << b.borrowReq << b.borrowHis << b.returnReq << b.returnHis;
     return out;
 }
 
-//  BookList 成员函数实现
-bool BookList::bidExist(const string &bid) const {
-    for (auto rit = this->bl.rbegin(); rit != this->bl.rend(); ++rit) {
-        if (rit->getBid() == bid) {
-            return true;
+// BookNode 构造函数
+BookList::BookNode::BookNode(const BaseBook& book) : data(book), next(nullptr) {}
+
+// BookList 私有辅助函数
+BookList::BookNode* BookList::findNode(const string& bid) const {
+    BookNode* current = head;
+    while (current != nullptr) {
+        if (current->data.getBid() == bid) {
+            return current;
+        }
+        current = current->next;
+    }
+    return nullptr;
+}
+
+BookList::BookNode* BookList::findNode(int index) const {
+    if (index < 0 || index >= count) {
+        return nullptr;
+    }
+    BookNode* current = head;
+    for (int i = 0; i < index && current != nullptr; i++) {
+        current = current->next;
+    }
+    return current;
+}
+
+void BookList::clear() {
+    BookNode* current = head;
+    while (current != nullptr) {
+        BookNode* next = current->next;
+        delete current;
+        current = next;
+    }
+    head = tail = nullptr;
+    count = 0;
+}
+
+// BookList 公有成员函数
+BookList::BookList() : head(nullptr), tail(nullptr), count(0) {}
+
+BookList::~BookList() {
+    clear();
+}
+
+BookList::BookList(const BookList& other) : head(nullptr), tail(nullptr), count(0) {
+    BookNode* current = other.head;
+    while (current != nullptr) {
+        add(current->data);
+        current = current->next;
+    }
+}
+
+BookList& BookList::operator=(const BookList& other) {
+    if (this != &other) {
+        clear();
+        BookNode* current = other.head;
+        while (current != nullptr) {
+            add(current->data);
+            current = current->next;
         }
     }
-    return false;
+    return *this;
 }
 
-void BookList::add(const BaseBook &bb) {
-    if (this->bidExist(bb.getBid())) {
-        throw runtime_error("书籍ID已存在，无法重复添加！");
+BaseBook& BookList::getByBid(const string &bid) {
+    BookNode* node = findNode(bid);
+    if (node == nullptr) {
+        throw runtime_error("Book not found with bid: " + bid);
     }
-    this->bl.push_back(bb);
+    return node->data;
 }
 
-void BookList::del(const BaseBook &bb) {
-    this->del(bb.getBid());
-}
-
-void BookList::del(const string &bid) {
-    if (!this->bidExist(bid)) {
-        throw runtime_error("书籍ID不存在，无法删除！");
+BaseBook& BookList::getByIndex(int index) {
+    BookNode* node = findNode(index);
+    if (node == nullptr) {
+        throw out_of_range("Index out of range: " + to_string(index));
     }
-    for (auto it = this->bl.begin(); it != this->bl.end(); ++it) {
-        if (it->getBid() == bid) {
-            if (!it->canDel()) throw runtime_error("书籍仍有借出，无法删除！");
-            this->bl.erase(it);
+    return node->data;
+}
+
+bool BookList::bidExist(const string &bid) const {
+    return findNode(bid) != nullptr;
+}
+
+void BookList::add(const BaseBook &bb){
+    BookNode* newNode = new BookNode(bb);
+
+    if (head == nullptr) {
+        head = tail = newNode;
+    } else {
+        tail->next = newNode;
+        tail = newNode;
+    }
+    count++;
+}
+
+void BookList::del(const BaseBook &bb){
+    del(bb.getBid());
+}
+
+void BookList::del(const string &bid){
+    if (head == nullptr) return;
+
+    // 删除头节点
+    if (head->data.getBid() == bid) {
+        BookNode* temp = head;
+        head = head->next;
+        if (head == nullptr) tail = nullptr;
+        delete temp;
+        count--;
+        return;
+    }
+
+    // 删除中间或尾部节点
+    BookNode* prev = head;
+    BookNode* current = head->next;
+
+    while (current != nullptr) {
+        if (current->data.getBid() == bid) {
+            prev->next = current->next;
+            if (current == tail) {
+                tail = prev;
+            }
+            delete current;
+            count--;
             return;
         }
+        prev = current;
+        current = current->next;
     }
 }
 
 int BookList::show() const {
-    cout << "编号\t书籍id\t书籍名称\t作者\t出版社\t书籍总数\t借出数量\t入库时间" << endl;
-    int count = 0;
-    for (auto it = this->bl.begin(); it != this->bl.end(); ++it) {
-        cout << ++count << ".\t";
-        it->show();
+    cout << "编号  书籍id  书籍名称  作者  出版社  书籍总数  借出数量" << endl;
+    int index = 0;
+    BookNode* current = head;
+
+    while (current != nullptr) {
+        cout << ++index << ".  ";
+        current->data.show();
+        cout << endl;
+        current = current->next;
     }
-    return this->bl.size();
+
+    return count;
 }
 
 string BookList::show(const int &num) const {
-    if (num < 0 || num >= (int)this->bl.size()) {
-        throw out_of_range("索引越界！");
+    BookNode* node = findNode(num);
+    if (node != nullptr) {
+        node->data.show();
+        cout << endl;
+        return node->data.getBid();
     }
-    this->bl[num].show();
-    return this->bl[num].getBid();
+    return "";
 }
 
 void BookList::show(const string &bid) const {
-    for (auto it = this->bl.begin(); it != this->bl.end(); ++it) {
-        if (it->getBid() == bid) {
-            it->show();
-            return;
-        }
+    BookNode* node = findNode(bid);
+    if (node != nullptr) {
+        node->data.show();
+        cout << endl;
     }
-    throw runtime_error("书籍ID不存在！");
 }
-
+string BookList::getBname(const string &bid){
+    BookNode* node = findNode(bid);
+    if (node == nullptr) {
+        return "";
+    }
+    return node->data.getBname();
+}
 void BookList::schBook(const string &s) const {
-    cout << "编号\t书籍id\t书籍名称\t作者\t出版社\t书籍总数\t借出数量\t入库时间" << endl;
+    cout << "编号  书籍id  书籍名称  作者  出版社  书籍总数  借出数量" << endl;
     int cnt = 0;
-    for (auto it = this->bl.begin(); it != this->bl.end(); ++it) {
-        if (it->match(s)) {
-            cout << ++cnt << ".\t";
-            it->show();
+    BookNode* current = head;
+
+    while (current != nullptr) {
+        if (current->data.match(s)) {
+            cout << ++cnt << ".  ";
+            current->data.show();
+            cout << endl;
         }
+        current = current->next;
     }
+
     if (cnt == 0) {
-        cout << "未找到匹配书籍！" << endl;
+        cout << "未找到匹配的书籍" << endl;
     }
 }
 
-void BookList::sortByInTime(bool asc) {
-    if (asc) {
-        sort(this->bl.begin(), this->bl.end(), compareInTimeAsc);
-    } else {
-        sort(this->bl.begin(), this->bl.end(), compareInTimeDesc);
-    }
-    cout << "图书已按入库时间" << (asc ? "升序" : "降序") << "排序完成！" << endl;
-}
+// BookList 友元函数
+istream &operator >> (istream &in, BookList &bl){
+    int num;
+    in >> num;
 
-// 运算符>>匹配（参数类型一致）
-istream &operator>>(istream &in, BookList &booklist) {
-    int bookCount;
-    in >> bookCount;
-    in.ignore();
-    for (int i = 0; i < bookCount; i++) {
+    bl.clear(); // 清空原有数据
+    for (int i = 0; i < num; i++) {
         BaseBook bb;
-        LibraryBookSystem::operator>>(in,bb); // 匹配BaseBook的>>运算符
-        booklist.add(bb);
+        in >> bb;
+        bl.add(bb);
     }
+
     return in;
 }
 
-// []运算符
-ostream &operator<<(ostream &out, const BookList &booklist) {
-    out << booklist.size() << endl;
-    for (int i=0;i<booklist.size();i++) {
-        LibraryBookSystem::operator<<(out,booklist.getBookAt(i)); 
-    }
-    return out;
-}
+ostream &operator << (ostream &out, const BookList &bl){
+    out << bl.count << endl;
 
-std::istream& operator>>(std::istream& in,LibraryBookSystem::BaseBook& bb){
-    return LibraryBookSystem::operator>>(in,bb);
-}
-std::ostream& operator>>(std::ostream& out,const LibraryBookSystem::BaseBook& bb){
-    return LibraryBookSystem::operator<<(out,bb);
+    BookList::BookNode* current = bl.head;
+    while (current != nullptr) {
+        out << current->data;
+        current = current->next;
+    }
+
+    return out;
 }
