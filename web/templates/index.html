@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图书管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --bg-color: #f3f4f6;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            padding-bottom: 40px;
+        }
+        .navbar {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            border-radius: 12px 12px 0 0 !important;
+            font-weight: 600;
+            padding: 14px 18px;
+            color: #333;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #375a7f;
+        }
+        .role-badge {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e9ecef;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .role-badge.reader {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        .role-badge.admin {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.7);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fc;
+        }
+        .small-muted {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 左边标题，右上角身份切换 -->
+<nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-book-open text-primary me-2"></i>
+            <strong>图书管理系统</strong>
+        </a>
+
+        <div class="d-flex align-items-center gap-3 ms-auto">
+            <span id="current-role-badge" class="role-badge reader">
+                <i class="fas fa-user"></i> 当前身份：读者
+            </span>
+            <div class="btn-group" role="group">
+                <button id="btn-role-reader" class="btn btn-outline-primary btn-sm active">
+                    <i class="fas fa-user"></i> 读者视图
+                </button>
+                <button id="btn-role-admin" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-user-shield"></i> 管理员视图
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+    <div class="row">
+
+        <!搜索 / 读者个人信息 / 管理员过滤条件 -->
+        <div class="col-lg-4">
+
+            <!-- 读者：搜索图书 -->
+            <div class="card" id="card-reader-search">
+                <div class="card-header">
+                    <i class="fas fa-search me-2"></i> 图书搜索（读者）
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-muted">关键字搜索</label>
+                        <input type="text" id="reader-search-keyword" class="form-control" placeholder="书名 / 作者 / 关键字">
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="readerResetSearch()">
+                            <i class="fas fa-undo"></i> 重置
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="readerSearchBooks()">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                    <p class="small-muted mt-2 mb-0">
+                        不输入直接点击搜索 = 查看所有图书。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 读者：我的借阅（纯前端框架ing -->
+            <div class="card" id="card-reader-myinfo">
+                <div class="card-header">
+                    <i class="fas fa-id-badge me-2"></i> 我的借阅
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-muted">读者编号 (RID)</label>
+                        <input type="text" id="reader-id" class="form-control" placeholder="例如: R0001">
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="readerFetchBorrowed()">
+                            <i class="fas fa-book-reader"></i> 查看我的借阅
+                        </button>
+                    </div>
+                    <p class="small-muted mb-1">
+                        展示你当前借了哪些书、状态如何。。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 管理员：过滤 / 查询条件 -->
+            <div class="card d-none" id="card-admin-filter">
+                <div class="card-header">
+                    <i class="fas fa-sliders-h me-2"></i> 管理员过滤条件
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-muted">按关键字搜索图书</label>
+                        <input type="text" id="admin-search-keyword" class="form-control" placeholder="书名 / 作者 / 分类 等">
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="adminResetSearch()">
+                            <i class="fas fa-undo"></i> 重置
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="adminSearchBooks()">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                    <hr>
+                    <p class="small-muted mb-1">
+                        “管理员视图”中可以查看所有历史记录、读者的借阅情况等
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 右侧：主内容区域（读者视图 / 管理员视图） -->
+        <div class="col-lg-8">
+
+            <!-- 读者视图 -->
+            <div id="view-reader">
+                <!-- 图书列表 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-book me-2"></i> 图书列表
+                            <span class="small-muted" id="reader-book-count"></span>
+                        </span>
+                        <button class="btn btn-outline-success btn-sm" onclick="readerLoadAllBooks()">
+                            <i class="fas fa-sync-alt"></i> 刷新
+                        </button>
+                    </div>
+                    <div class="card-body position-relative">
+                        <div id="reader-loading" class="loading-overlay">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>书名</th>
+                                    <th>作者</th>
+                                    <th>库存</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody id="reader-books-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        暂无数据，请点击右上角“刷新”或使用左侧搜索。
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 读者：我的借阅结果(纯前端ing) -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="fas fa-list me-2"></i> 我的借阅记录
+                    </div>
+                    <div class="card-body">
+                        <p class="small-muted mb-2">
+                            展示：
+                            <br>· 当前借了哪些书
+                            <br>· 每本书的借阅时间 / 应还时间 / 当前状态
+                        </p>
+                        <div id="reader-borrowed-list" class="small text-muted">
+                            尚未接入后端 API
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 管理员视图 -->
+            <div id="view-admin" class="d-none">
+
+                <!-- 管理员：图书列表 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-book me-2"></i> 图书列表（管理员）
+                            <span class="small-muted" id="admin-book-count"></span>
+                        </span>
+                        <button class="btn btn-outline-success btn-sm" onclick="adminLoadAllBooks()">
+                            <i class="fas fa-sync-alt"></i> 刷新
+                        </button>
+                    </div>
+                    <div class="card-body position-relative">
+                        <div id="admin-loading-books" class="loading-overlay">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>书名</th>
+                                    <th>作者</th>
+                                    <th>库存</th>
+                                    <th>借出数量</th>
+                                    <th>分类</th>
+                                    <th>状态</th>
+                                </tr>
+                                </thead>
+                                <tbody id="admin-books-tbody">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        暂无数据，请点击右上角“刷新”或使用左侧搜索。
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 管理员：历史记录 -->
+                <div class="card mt-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-history me-2"></i> 借还书历史记录
+                        </span>
+                        <button class="btn btn-outline-success btn-sm" onclick="adminLoadHistory()">
+                            <i class="fas fa-sync-alt"></i> 刷新
+                        </button>
+                    </div>
+                    <div class="card-body position-relative">
+                        <div id="admin-loading-history" class="loading-overlay">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>记录ID</th>
+                                    <th>读者</th>
+                                    <th>图书</th>
+                                    <th>状态备注</th>
+                                    <th>时间信息</th>
+                                </tr>
+                                </thead>
+                                <tbody id="admin-history-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        暂无数据，请点击上方“刷新”。
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="small-muted mt-2 mb-0">
+                            按读者查看借阅情况、按图书查看借阅人列表等
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 依赖脚本 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentRole = 'reader'; // 'reader' or 'admin'
+
+    function switchToReader() {
+        currentRole = 'reader';
+        document.getElementById('view-reader').classList.remove('d-none');
+        document.getElementById('view-admin').classList.add('d-none');
+        document.getElementById('card-reader-search').classList.remove('d-none');
+        document.getElementById('card-reader-myinfo').classList.remove('d-none');
+        document.getElementById('card-admin-filter').classList.add('d-none');
+
+        document.getElementById('btn-role-reader').classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        document.getElementById('btn-role-reader').classList.add('active');
+        document.getElementById('btn-role-admin').classList.remove('active');
+        document.getElementById('btn-role-admin').classList.replace('btn-outline-primary', 'btn-outline-secondary');
+
+        const badge = document.getElementById('current-role-badge');
+        badge.className = 'role-badge reader';
+        badge.innerHTML = '<i class="fas fa-user"></i> 当前身份：读者';
+    }
+
+    function switchToAdmin() {
+        currentRole = 'admin';
+        document.getElementById('view-reader').classList.add('d-none');
+        document.getElementById('view-admin').classList.remove('d-none');
+        document.getElementById('card-reader-search').classList.add('d-none');
+        document.getElementById('card-reader-myinfo').classList.add('d-none');
+        document.getElementById('card-admin-filter').classList.remove('d-none');
+
+        document.getElementById('btn-role-admin').classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        document.getElementById('btn-role-admin').classList.add('active');
+        document.getElementById('btn-role-reader').classList.remove('active');
+        document.getElementById('btn-role-reader').classList.replace('btn-outline-primary', 'btn-outline-secondary');
+
+        const badge = document.getElementById('current-role-badge');
+        badge.className = 'role-badge admin';
+        badge.innerHTML = '<i class="fas fa-user-shield"></i> 当前身份：管理员';
+    }
+
+    document.getElementById('btn-role-reader').addEventListener('click', switchToReader);
+    document.getElementById('btn-role-admin').addEventListener('click', switchToAdmin);
+
+
+    function renderReaderBooks(books) {
+        const tbody = document.getElementById('reader-books-tbody');
+        const countSpan = document.getElementById('reader-book-count');
+        countSpan.textContent = `共 ${books.length} 本`;
+
+        if (!books.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">未找到图书</td></tr>';
+            return;
+        }
+
+        let html = '';
+        books.forEach((b, idx) => {
+            const canBorrow = (b.status && b.status.indexOf('可借') !== -1) || (b.total - b.borrowed > 0);
+            const statusBadge = canBorrow
+                ? '<span class="badge bg-success">可借</span>'
+                : '<span class="badge bg-secondary">不可借</span>';
+
+            html += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${b.name}</td>
+                    <td>${b.author}</td>
+                    <td>${b.total - b.borrowed}/${b.total}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" ${canBorrow ? '' : 'disabled'}
+                                onclick="readerRequestBorrow('${b.id}')">
+                            借书申请
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function renderAdminBooks(books) {
+        const tbody = document.getElementById('admin-books-tbody');
+        const countSpan = document.getElementById('admin-book-count');
+        countSpan.textContent = `共 ${books.length} 本`;
+
+        if (!books.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">未找到图书</td></tr>';
+            return;
+        }
+
+        let html = '';
+        books.forEach((b, idx) => {
+            html += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${b.name}</td>
+                    <td>${b.author}</td>
+                    <td>${b.total}</td>
+                    <td>${b.borrowed}</td>
+                    <td>${b.category}</td>
+                    <td>${b.status}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    async function readerLoadAllBooks() {
+        const loading = document.getElementById('reader-loading');
+        loading.style.display = 'flex';
+        try {
+            const res = await fetch('/api/get_books');
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                renderReaderBooks(data.data || []);
+            } else {
+                alert('获取图书失败：' + (data.message || '未知错误'));
+            }
+        } catch (e) {
+            alert('请求失败：' + e);
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    async function readerSearchBooks() {
+        const keyword = document.getElementById('reader-search-keyword').value.trim();
+        if (!keyword) {
+            // 没关键字就拉全部
+            return readerLoadAllBooks();
+        }
+        const loading = document.getElementById('reader-loading');
+        loading.style.display = 'flex';
+        try {
+            const res = await fetch('/api/books/search?q=' + encodeURIComponent(keyword));
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                renderReaderBooks(data.data || []);
+            } else {
+                alert('搜索失败：' + (data.message || '未知错误'));
+            }
+        } catch (e) {
+            alert('请求失败：' + e);
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    function readerResetSearch() {
+        document.getElementById('reader-search-keyword').value = '';
+        readerLoadAllBooks();
+    }
+
+    function readerRequestBorrow(bid) {
+        const rid = document.getElementById('reader-id').value.trim();
+        if (!rid) {
+            return alert('请先在左侧“我的借阅”中填写你的读者编号 (RID)！');
+        }
+        // 这里先用 alert 模拟
+        alert('借书申请（预留）：读者 ' + rid + ' 申请借阅图书 ID=' + bid + '。\n\n你之后可以实现 /api/reader/borrow_request 之类的接口。');
+    }
+
+    function readerFetchBorrowed() {
+        const rid = document.getElementById('reader-id').value.trim();
+        if (!rid) {
+            return alert('请输入读者编号 (RID)');
+        }
+        alert('这里将来调用类似 GET /api/reader/' + rid + '/borrows 的接口，展示该读者当前的借阅信息。\n目前只是占位说明。');
+    }
+
+    async function adminLoadAllBooks() {
+        const loading = document.getElementById('admin-loading-books');
+        loading.style.display = 'flex';
+        try {
+            const res = await fetch('/api/get_books');
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                renderAdminBooks(data.data || []);
+            } else {
+                alert('获取图书失败：' + (data.message || '未知错误'));
+            }
+        } catch (e) {
+            alert('请求失败：' + e);
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    async function adminSearchBooks() {
+        const keyword = document.getElementById('admin-search-keyword').value.trim();
+        if (!keyword) {
+            return adminLoadAllBooks();
+        }
+        const loading = document.getElementById('admin-loading-books');
+        loading.style.display = 'flex';
+        try {
+            const res = await fetch('/api/books/search?q=' + encodeURIComponent(keyword));
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                renderAdminBooks(data.data || []);
+            } else {
+                alert('搜索失败：' + (data.message || '未知错误'));
+            }
+        } catch (e) {
+            alert('请求失败：' + e);
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    function adminResetSearch() {
+        document.getElementById('admin-search-keyword').value = '';
+        adminLoadAllBooks();
+    }
+
+    async function adminLoadHistory() {
+        const loading = document.getElementById('admin-loading-history');
+        loading.style.display = 'flex';
+        const tbody = document.getElementById('admin-history-tbody');
+        try {
+            const res = await fetch('/api/history');
+            const data = await res.json();
+            if (!(res.ok && data.status === 'success')) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">获取历史记录失败</td></tr>';
+                return;
+            }
+            const historys = data.data || [];
+            if (!historys.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">暂无历史记录</td></tr>';
+                return;
+            }
+            let html = '';
+            historys.forEach((h, idx) => {
+                const timeInfo = `
+                    借出申请: ${h.brtime || '-'}<br>
+                    借出时间: ${h.btime || '-'}<br>
+                    归还申请: ${h.rrtime || '-'}<br>
+                    实际归还: ${h.rtime || '-'}
+                `;
+                html += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${h.hid}</td>
+                        <td>${h.rname} (${h.rid})</td>
+                        <td>${h.bname} (${h.bid})</td>
+                        <td>${h.note || ''}</td>
+                        <td class="small">${timeInfo}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">请求失败：' + e + '</td></tr>';
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        readerLoadAllBooks();
+    });
+</script>
+</body>
+</html>
