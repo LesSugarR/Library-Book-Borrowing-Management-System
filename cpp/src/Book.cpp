@@ -364,14 +364,6 @@ void BookList::saveToJsonFile(const string& filename) const {
 }
 // BookList 友元函数
 istream &operator >> (istream &in, BookList &bl){
-    // int num;
-    // in >> num;
-    // bl.clear();
-    // for (int i = 0; i < num; i++) {
-    //     Book b; // 必须是 Book
-    //     in >> b;
-    //     bl.add(b);
-    // }
     // return in;
     int num;
     if (in >> num) {
@@ -386,6 +378,7 @@ istream &operator >> (istream &in, BookList &bl){
 ostream &operator << (ostream &out, const BookList &bl){
     out << bl.count << endl;
     BookList::BookNode* current = bl.head;
+    int i = 0;
     while (current != nullptr) {
         out << current->data;
         current = current->next;

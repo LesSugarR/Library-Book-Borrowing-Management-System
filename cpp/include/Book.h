@@ -19,12 +19,20 @@ public:
             : bid(_bid), bname(_bname), author(_author), press(_press), totalNum(_totalNum), borrowNum(0), category(_cat), status("可借") {}
     BaseBook() {}
     virtual ~BaseBook() {}
-
+    void setTotalNum(int _totalNum){totalNum = _totalNum;}
+    void setBorrowNum(int _borrowNum){borrowNum = _borrowNum;}
+    void setBname(const string &_bname) { bname = _bname; }
+    void setAuthor(const string &_author) { author = _author; }
+    void setPress(const string &_press) { press = _press; }
+    void setCategory(const string &_cat) { category = _cat; }
+    void setStatus(const string &_status) { status = _status; }
     string getBid() const { return bid; }
     string getBname() const { return bname; }
     string getAuthor()const { return author; }
     string getPress()const { return press; }
     string getCategory()const { return category; }
+    int getTotalNum() const { return totalNum; }
+    int getBorrowNum() const { return borrowNum; }
     // 简单的 JSON 输出
     virtual string toJson() const;
 
@@ -95,7 +103,8 @@ public:
     BookList(const BookList& other);
     BookList& operator=(const BookList& other);
     string toJsonString() const;
-    Book& getByBid(const string& bid);
+    Book& getByBid(const string& bid);//可修改
+    Book& getByBid(const string& bid) const;//只读
     Book &getByIndex(const int &index);
     int size() const { return count; }
     bool bidExist(const string& bid) const;

@@ -1,6 +1,7 @@
 #ifndef READER_H
 #define READER_H
 #include"History.h"
+#include "Book.h"
 #include<bits/stdc++.h>
 #define HL HistoryList
 #define BH BaseHistory
@@ -19,7 +20,6 @@ public:
     string getRid() const { return rid; }
     string getRname() const { return rname; }
     int getBorrowNum() const { return borrowNum; }
-
     bool match(const string &s) const;
     void show() const;		//将BaseReader存储的信息输出到屏幕上
     bool canDel() const { return borrowNum==0; }
@@ -37,9 +37,12 @@ public:
     Reader(string _rid, string _rname, string _rpasswd, int _borrowNum = 0)
             : BaseReader(_rid, _rname, _borrowNum) { rpasswd = _rpasswd; }
     Reader() : BaseReader() {}
+    const HL& getBorrowHis() const { return borrowHis; }
+    HL& getBorrowHis() { return borrowHis; }
     BaseReader getBase() const {
         return *this; // 直接把自己返回去，编译器会自动切片，只保留 BaseReader 的部分
     }
+    string getPwd() const { return rpasswd; }
     bool rpasswdRight(const string &_rpasswd) const { return rpasswd==_rpasswd; }
     void changeRpasswd(const string &_rpasswd){ rpasswd=_rpasswd; }
     void reqBorrow(const BH &bh);
@@ -50,6 +53,9 @@ public:
     void agrReturn(const BH &bh);
     void canReturn(const BH &bh);
     void refReturn(const BH &bh);
+    void setRid(const string &_rid){rid = _rid;};
+    void setRname(const string &_rname){rname = _rname;};
+    void setBorrowNum(int _borrowNum){borrowNum = _borrowNum;};
     int showBorrowReq() const ;
     int showBorrowHis() const ;
     int showReturnReq() const ;
@@ -77,7 +83,10 @@ private:
 public:
     ReaderList():head(nullptr),tail(nullptr),count(0){}
     ~ReaderList(){clear();};
-
+    Reader& getByRid(const string &rid);
+    Reader &getByIndex(const int &index) const;
+    friend istream &operator>>(istream &in, ReaderList &rl);
+    friend ostream &operator<<(ostream &out, const ReaderList &rl);
     ReaderList(const ReaderList&) = delete;
     ReaderList& operator=(const ReaderList&) = delete;
     void clear();
@@ -96,10 +105,9 @@ public:
     string toJsonString() const;
     string getRname(const string &rid) const ;
 
-    Reader &getByRid(const string &rid);
-    Reader &getByIndex(const int &i);
-    friend istream &operator >> (istream &in,ReaderList &rl);
-    friend ostream &operator << (ostream &out,const ReaderList &rl);
 };
+
+
+
 #endif //READER_H
 

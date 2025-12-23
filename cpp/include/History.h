@@ -26,6 +26,7 @@ protected:
     string rrtime;
     /** @brief 实际归还时间*/
     string rtime;
+    string status;
 public:
     BaseHistory(string _hid,string _bid,string _rid,string _bname,string _rname,string _note="无",string _brtime="无",string _btime="无",string _rrtime="无",string _rtime="无"):
             hid(_hid),bid
@@ -45,11 +46,12 @@ public:
     string getBtime() const { return btime; }
     string getRrtime() const { return rrtime; }
     string getRtime() const { return rtime; }
+    string getStatus() const { return status; }
+    void setStatus(string s)  { status = s; }
+    void setRtime(string t) { rtime = t; }
+    void setRrtime(string rt){rrtime = rt;}
     virtual void display() const;//【增加了virtual】
-    void show()const
-    {
-        display();
-    }
+    void show()const{display();}
     bool match(const string &s) const;
     friend istream &operator >> (istream &in,BaseHistory &bh);
     friend ostream &operator << (ostream &out,const BaseHistory &bh);
@@ -59,8 +61,6 @@ class History:public BaseHistory{
 public:
     class Record{
         string time,note;
-
-
     public:
         Record(string _time,string _note):time(_time),note(_note){}
         Record(){}
@@ -86,7 +86,6 @@ public:
         // 深拷贝构造函数，否则链表复制会崩溃
         RecordLinkedList(const RecordLinkedList& other);
         RecordLinkedList& operator=(const RecordLinkedList& other);
-
         void clear();
         void append(const Record &record);
         int getCount() const { return count; }
@@ -142,7 +141,7 @@ private:
 public:
     HistoryList() : head(nullptr), tail(nullptr), count(0) {}
     ~HistoryList() { clear(); }
-
+    void showForApi();
     // 同样需要深拷贝构造函数
     HistoryList(const HistoryList& other);
     HistoryList& operator=(const HistoryList& other);
@@ -165,12 +164,13 @@ public:
     // 查找相关
     void schHistory(const string &s) const;
     History &getByHid(const string &hid);
-    BaseHistory getByIndex(int index); // 新增
+    BaseHistory &getByIndex(int index); // 新增
     //恢复operator[]兼容性
     BaseHistory &operator[](const string &hid);
     BaseHistory &operator[](const int &index);
     BaseHistory*findByHid(const string& hid);
     string toJsonArray() const;
+
     friend istream& operator>>(istream& in, HistoryList& hl);
     friend ostream& operator<<(ostream& out, const HistoryList& hl);
 

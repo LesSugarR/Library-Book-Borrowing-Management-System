@@ -149,7 +149,7 @@ void History::refReturn(){
 }
 istream &operator >> (istream &in,History &h){
     in>> h.hid >> h.bid >> h.rid >> h.bname >> h.rname >> h.note
-      >> h.brtime >> h.btime >> h.rrtime >> h.rtime;
+      >> h.brtime >> h.btime >> h.rrtime >> h.rtime >> h.status;
     int num; in>> num;
     h.recordLinkedList.clear();
     while(num--){ History::Record hr; in>> hr; h.recordLinkedList.append(hr); }
@@ -158,7 +158,7 @@ istream &operator >> (istream &in,History &h){
 ostream &operator << (ostream &out,const History &h){
     out<< h.hid << "\n" << h.bid << "\n" << h.rid << "\n" << h.bname << "\n" << h.rname << "\n"
        << h.note << "\n" << h.brtime << "\n" << h.btime << "\n" << h.rrtime << "\n"
-       << h.rtime << endl;
+       << h.rtime << "\n" << h.status <<  endl;
     out << h.recordLinkedList.getCount() << "\n";
     out << h.recordLinkedList;
     return out;
@@ -215,7 +215,27 @@ void HistoryList::add(const BaseHistory& bh) {
 void HistoryList::del(const BaseHistory &bh) {
     del(bh.getHid());
 }
+void HistoryList::showForApi()
+{
+    cout << count << endl; // 第1行：总数
+    HistoryNode* current = head;
+    while (current != nullptr) {
+        // 严格按照顺序输出 11 个字段
+        cout << current->data.getHid() << endl;
+        cout << current->data.getBid() << endl;
+        cout << current->data.getRid() << endl;
+        cout << current->data.getBname() << endl;
+        cout << current->data.getRname() << endl;
+        cout << current->data.getNote() << endl;
+        cout << current->data.getBrtime() << endl;
+        cout << current->data.getBtime() << endl;
+        cout << current->data.getRrtime() << endl;
+        cout << current->data.getRtime() << endl;
+        cout << current->data.getStatus() << endl;
 
+        current = current->next;
+    }
+}
 void HistoryList::del(const string &hid) {
     if (!head) return;
 
@@ -345,7 +365,7 @@ History &HistoryList::getByHid(const string &hid) {
     return node->data; // 返回节点里的数据引用
 }
 
-BaseHistory HistoryList::getByIndex(int index) {
+BaseHistory &HistoryList::getByIndex(int index) {
     return (*this)[index]; // 复用 operator[]
 }
 BaseHistory* HistoryList::findByHid(const string& hid) {
@@ -366,21 +386,55 @@ string HistoryList::toJsonArray() const {
 }
 
 istream& operator>>(istream& in, HistoryList& hl) {
-    int n;
-    in >> n;
-    for (int i = 0; i < n; ++i) {
-        History h; // 读入 History
-        in >> h;
-        hl.add(h);
+    int n = 0;
+    if (!(in >> n)) return in;
+    hl.clear();
+    string tmp;
+    getline(in, tmp); //去掉n后面的换行符
+    for(int i=0;i<n;i++){
+        string hid,bid,rid,bname,rname,note,brtime,btime,rrtime,rtime,status;
+        getline(in, hid);
+        getline(in, bid);
+        getline(in, rid);
+        getline(in, bname);
+        getline(in, rname);
+        getline(in, note);
+        getline(in, brtime);
+        getline(in, btime);
+        getline(in, rrtime);
+        getline(in, rtime);
+        getline(in, status);
+        //如果读到的是占位符 "-"，则还原为空字符串
+        if (note == "-") note = "";
+        if (brtime == "-") brtime = "";
+        if (btime == "-") btime = "";
+        if (rrtime == "-") rrtime = "";
+        if (rtime == "-") rtime = "";
+        BH bh(hid,bid,rid,bname,rname,note,brtime,btime,rrtime,rtime);
+        bh.setStatus(status);
+        hl.add(bh);
     }
     return in;
 }
 
-ostream& operator<<(ostream& out, const HistoryList& hl) {
-    out << hl.count << "\n";
-    HistoryList::HistoryNode* curr = hl.head;
-    while (curr != nullptr) {
-        out << curr->data << "\n";
+ostream& operator<<(ostream& out, const HistoryList& hl)
+{
+    out << hl.size() << '\n';
+    const HistoryList::HistoryNode* curr = hl.head;
+    while (curr)
+    {
+        const BH& data = curr->data;
+        out << (data.getHid().empty() ? "-" : data.getHid()) << endl;
+        out << (data.getBid().empty() ? "-" : data.getBid()) << endl;
+        out << (data.getRid().empty() ? "-" : data.getRid()) << endl;
+        out << (data.getBname().empty() ? "-" : data.getBname()) << endl;
+        out << (data.getRname().empty() ? "-" : data.getRname()) << endl;
+        out << (data.getNote().empty() ? "-" : data.getNote()) << endl;
+        out << (data.getBrtime().empty() ? "-" : data.getBrtime()) << endl;
+        out << (data.getBtime().empty() ? "-" : data.getBtime()) << endl;
+        out << (data.getRrtime().empty() ? "-" : data.getRrtime()) << endl;
+        out << (data.getRtime().empty() ? "-" : data.getRtime()) << endl;
+        out << (data.getStatus().empty() ? "-" : data.getStatus()) << endl;
         curr = curr->next;
     }
     return out;

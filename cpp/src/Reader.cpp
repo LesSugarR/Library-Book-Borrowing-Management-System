@@ -3,6 +3,7 @@
 //
 #include "../include/Reader.h"
 #include  "../include/History.h"
+#include  "../include/Book.h"
 #include <bits/stdc++.h>
 #define BR BaseReader
 #define RL ReaderList
@@ -36,11 +37,12 @@ ostream &operator << (ostream &out,const BR &br){
 
 
 //Reader:
+
 void Reader::reqBorrow(const BH &bh){
     borrowReq.add(bh);
 }
 void Reader::agrBorrow(const BH &bh){
-    borrowReq.del(bh);
+    //borrowReq.del(bh);
     borrowHis.add(bh);
     borrowNum++;
 }
@@ -106,12 +108,41 @@ string Reader::toJson() const {
     return ss.str();
 }
 istream &operator >> (istream& in,Reader &r){
-    in>> r.rid >> r.rname >> r.borrowNum >> r.rpasswd >> r.borrowReq >> r.borrowHis >> r.returnReq >> r.returnHis;
+    string rid, rname, pwd, tmp;
+    int bNum;
+    // 1. 读取 ID
+    getline(in, rid);
+    if (rid.empty() && !in.eof()) {
+        getline(in, rid);
+    }
+    if (rid.empty()) return in;
+    getline(in, rname);
+    if (!(in >> bNum)) return in;
+    getline(in, tmp);
+    getline(in, pwd);
+    r.setRid(rid);
+    r.setRname(rname);
+    r.setBorrowNum(bNum);
+    r.rpasswd = pwd;
+
+    in >> r.borrowReq;
+    in >> r.borrowHis;
+    in >> r.returnReq;
+    in >> r.returnHis;
+
     return in;
 }
 ostream &operator << (ostream &out,const Reader &r){
-    out<< r.rid << "\n" << r.rname << "\n" << r.borrowNum << "\n" << r.rpasswd << endl
-       << r.borrowReq << r.borrowHis << r.returnReq << r.returnHis << endl;
+    out << r.getRid() << endl;       // ID
+    out << r.getRname() << endl;     // 姓名
+    out << r.getBorrowNum() << endl; // 当前借阅数量
+    out << r.rpasswd << endl;        // 密码
+
+    // 写入 4 个链表
+    out << r.borrowReq;
+    out << r.borrowHis;
+    out << r.returnReq;
+    out << r.returnHis;
     return out;
 }
 
@@ -247,15 +278,13 @@ string ReaderList::toJsonString() const {
     return json;
 }
 // 【关键修改】返回类型改为 Reader&
-Reader &ReaderList::getByRid(const string &rid) {
-    BaseReaderNode* node = findNode(rid);
-    if (node == nullptr) {
-        throw runtime_error("该节点不存在: " + rid);
-    }
-    return node->data;
+Reader& ReaderList::getByRid(const string &rid) {
+    BaseReaderNode *p = findNode(rid);
+    if (!p) throw runtime_error("Error: 未找到读者: " + rid);
+    return p->data;
 }
 // 【关键修改】返回类型改为 Reader&
-Reader &ReaderList::getByIndex(const int &index) {
+Reader &ReaderList::getByIndex(const int &index)const  {
     if (index < 0 || index >= count) {
         throw out_of_range("不符合范围: " + to_string(index));
     }
@@ -280,23 +309,23 @@ ReaderList::BaseReaderNode *ReaderList::findNode(const string &rid) {
     return nullptr;
 }
 // 流操作符重载
-std::istream &operator>>(std::istream &in, ReaderList &rl) {
-    int num;
-    if (!(in >> num)) return in; // 防止读取失败
-    while (num--) {
-        Reader r; // 修改为 Reader
+istream &operator>>(istream &in, ReaderList &rl) {
+    int n = 0;
+    if (!(in >> n)) return in;
+    for (int i = 0; i < n; ++i) {
+        Reader r;
         in >> r;
         rl.add(r);
     }
     return in;
 }
+ostream &operator<<(ostream &out, const ReaderList &rl) {
 
-std::ostream &operator<<(std::ostream &out, const ReaderList &rl) {
-    out << rl.size() << std::endl;
-    ReaderList::BaseReaderNode* curr = rl.head;
-    while (curr != nullptr) {
-        out << curr->data << std::endl;
-        curr = curr->next;
+    out << rl.size() << endl;
+    auto p = rl.head;
+    while (p) {
+        out << p->data << "\n";
+        p = p->next;
     }
     return out;
 }

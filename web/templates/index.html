@@ -1,604 +1,1308 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>图书管理系统</title>
+    <title>图书馆 | 智能管理系统</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap & Icons -->
+    <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary-color: #4e73df;
-            --bg-color: #f3f4f6;
+            --sidebar-width: 260px;
+            --primary-color: #2563eb;
+            --card-radius: 16px;
+            --transition-speed: 0.3s;
         }
+
         body {
-            background-color: var(--bg-color);
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-            padding-bottom: 40px;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bs-body-bg);
+            overflow-x: hidden;
         }
-        .navbar {
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: var(--bs-tertiary-bg);
+            border-right: 1px solid var(--bs-border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: var(--transition-speed);
         }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--bs-heading-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 10px;
+            margin-bottom: 8px;
+            padding: 12px 16px;
+            color: var(--bs-secondary-color);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-pills .nav-link:hover {
+            background-color: var(--bs-secondary-bg);
+            color: var(--bs-primary);
+            transform: translateX(5px);
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-pills .nav-link i {
+            width: 24px;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: var(--transition-speed);
+        }
+
+        /* 卡片优化 */
         .card {
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            margin-bottom: 20px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.04);
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            transition: transform 0.2s;
         }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+
         .card-header {
-            background: white;
-            border-bottom: 1px solid #eee;
-            border-radius: 12px 12px 0 0 !important;
+            background: transparent;
+            border-bottom: 1px solid var(--bs-border-color);
+            padding: 1.2rem 1.5rem;
             font-weight: 600;
-            padding: 14px 18px;
-            color: #333;
         }
-        .btn-primary {
-            background-color: var(--primary-color);
-            border: none;
+
+        /* 表格优化 */
+        .table > :not(caption) > * > * {
+            padding: 1rem 1rem;
+            background-color: transparent;
+            border-bottom-color: var(--bs-border-color);
         }
-        .btn-primary:hover {
-            background-color: #375a7f;
-        }
-        .role-badge {
-            font-size: 0.9rem;
+
+        /* 状态徽章 */
+        .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #e9ecef;
-            color: #6c757d;
-            font-weight: 600;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
-        .role-badge.reader {
-            background: #d1e7dd;
-            color: #0f5132;
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
         }
-        .role-badge.admin {
-            background: #cfe2ff;
-            color: #084298;
-        }
+
+        /* 加载动画 */
         .loading-overlay {
-            display: none;
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.7);
-            z-index: 10;
+            top:0; left:0; right:0; bottom:0;
+            background: rgba(255,255,255,0.8);
+            z-index: 5;
+            display: none;
             justify-content: center;
             align-items: center;
-            border-radius: 12px;
+            border-radius: var(--card-radius);
         }
-        .table-hover tbody tr:hover {
-            background-color: #f8f9fc;
+        .table-sticky thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--bs-body-bg);
         }
-        .small-muted {
-            font-size: 0.85rem;
-            color: #6c757d;
+        [data-bs-theme="dark"] .loading-overlay {
+            background: rgba(0,0,0,0.7);
         }
     </style>
 </head>
 <body>
 
-<!-- 左边标题，右上角身份切换 -->
-<nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand" href="#">
-            <i class="fas fa-book-open text-primary me-2"></i>
-            <strong>图书管理系统</strong>
-        </a>
+<!-- 侧边栏 -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <i class="fas fa-book-reader text-primary"></i>
+        <span>图书管理系统</span>
+    </div>
 
-        <div class="d-flex align-items-center gap-3 ms-auto">
-            <span id="current-role-badge" class="role-badge reader">
-                <i class="fas fa-user"></i> 当前身份：读者
-            </span>
-            <div class="btn-group" role="group">
-                <button id="btn-role-reader" class="btn btn-outline-primary btn-sm active">
-                    <i class="fas fa-user"></i> 读者视图
-                </button>
-                <button id="btn-role-admin" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-user-shield"></i> 管理员视图
-                </button>
+    <div class="nav flex-column nav-pills me-3" role="tablist">
+        <div class="small text-uppercase fw-bold text-muted mb-2 px-3">视图切换</div>
+
+        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#view-reader" onclick="switchRole('reader')">
+            <i class="fas fa-user"></i> 读者大厅
+        </button>
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#view-admin" onclick="switchRole('admin')">
+            <i class="fas fa-user-shield"></i> 管理后台
+        </button>
+    </div>
+
+    <div class="mt-auto">
+        <hr class="text-muted">
+        <div class="d-flex align-items-center justify-content-between px-2">
+            <span class="small text-muted" id="theme-text">浅色模式</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
             </div>
         </div>
     </div>
 </nav>
 
-<div class="container-fluid px-4">
-    <div class="row">
+<!-- 主内容 -->
+<div class="main-content">
 
-        <!搜索 / 读者个人信息 / 管理员过滤条件 -->
-        <div class="col-lg-4">
+    <!-- 顶部欢迎栏 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1" id="page-title">读者大厅</h4>
+            <p class="text-muted small mb-0">欢迎使用图书馆智能管理系统</p>
+        </div>
+        <!-- 移动端菜单按钮 -->
+        <button class="btn btn-outline-secondary d-md-none" onclick="document.querySelector('.sidebar').classList.toggle('show')">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
 
-            <!-- 读者：搜索图书 -->
-            <div class="card" id="card-reader-search">
-                <div class="card-header">
-                    <i class="fas fa-search me-2"></i> 图书搜索（读者）
+    <!-- 读者视图 -->
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="view-reader">
+            <div class="row g-4">
+                <!-- 左侧：个人信息 & 借阅状态 -->
+                <div class="col-lg-4">
+                    <!-- 登录/信息卡片 -->
+                    <div class="card mb-4 border-primary border-opacity-25">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="fas fa-id-card text-primary me-2"></i>我的信息</h5>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">请输入您的读者ID以借书/还书</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                                    <input type="text" id="current-reader-id" class="form-control" placeholder="例如: 123456">
+                                    <button class="btn btn-primary" onclick="loadMyInfo()">确认</button>
+                                </div>
+                            </div>
+                            <div id="reader-status-area" class="d-none">
+                                <div class="alert alert-soft-primary bg-primary bg-opacity-10 text-primary border-0">
+                                    <i class="fas fa-check-circle me-1"></i> 已识别读者
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 我的借阅列表 (还书操作) -->
+                    <div class="card" style="min-height: 300px;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>我的借阅</span>
+                            <button class="btn btn-sm btn-light rounded-circle" onclick="loadMyInfo()"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <div class="card-body p-0 position-relative">
+                            <div id="loading-my-books" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                            <ul class="list-group list-group-flush" id="my-borrowed-list">
+                                <li class="list-group-item text-center text-muted py-4">请先输入ID并点击确认</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold text-muted">关键字搜索</label>
-                        <input type="text" id="reader-search-keyword" class="form-control" placeholder="书名 / 作者 / 关键字">
+
+                <!-- 右侧：图书库 (借书操作) -->
+                <div class="col-lg-8">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-transparent">
+                            <div class="input-group" style="max-width: 300px;">
+                                <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="reader-search" class="form-control border-start-0" placeholder="搜索书名/作者...">
+                                <button class="btn btn-outline-secondary" onclick="searchBooks('reader')">搜索</button>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+
+                                <select class="form-select form-select-sm" id="reader-cat" style="width:auto;" onchange="applyReaderFilterAndRender()">
+                                    <option value="">全部分类</option>
+                                </select>
+                                <div class="form-check ms-2">
+                                    <input class="form-check-input" type="checkbox" id="reader-only-avail" onchange="applyReaderFilterAndRender()">
+                                    <label class="form-check-label small" for="reader-only-avail">仅看可借</label>
+                                </div>
+                                <button class="btn btn-light text-primary ms-auto" onclick="loadAllBooks('reader')">
+                                    <i class="fas fa-sync-alt me-1"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0 position-relative">
+                            <div id="loading-reader-books" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                            <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                                <table class="table table-hover align-middle mb-0 table-sticky">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>书名</th>
+                                        <th>作者</th>
+                                        <th>库存</th>
+                                        <th>状态</th>
+                                        <th class="text-end">操作</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="reader-books-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button class="btn btn-outline-secondary btn-sm" onclick="readerResetSearch()">
-                            <i class="fas fa-undo"></i> 重置
-                        </button>
-                        <button class="btn btn-primary btn-sm" onclick="readerSearchBooks()">
-                            <i class="fas fa-search"></i> 搜索
-                        </button>
-                    </div>
-                    <p class="small-muted mt-2 mb-0">
-                        不输入直接点击搜索 = 查看所有图书。
-                    </p>
                 </div>
             </div>
-
-            <!-- 读者：我的借阅（纯前端框架ing -->
-            <div class="card" id="card-reader-myinfo">
-                <div class="card-header">
-                    <i class="fas fa-id-badge me-2"></i> 我的借阅
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold text-muted">读者编号 (RID)</label>
-                        <input type="text" id="reader-id" class="form-control" placeholder="例如: R0001">
-                    </div>
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-2">
-                        <button class="btn btn-outline-primary btn-sm" onclick="readerFetchBorrowed()">
-                            <i class="fas fa-book-reader"></i> 查看我的借阅
-                        </button>
-                    </div>
-                    <p class="small-muted mb-1">
-                        展示你当前借了哪些书、状态如何。。
-                    </p>
-                </div>
-            </div>
-
-            <!-- 管理员：过滤 / 查询条件 -->
-            <div class="card d-none" id="card-admin-filter">
-                <div class="card-header">
-                    <i class="fas fa-sliders-h me-2"></i> 管理员过滤条件
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold text-muted">按关键字搜索图书</label>
-                        <input type="text" id="admin-search-keyword" class="form-control" placeholder="书名 / 作者 / 分类 等">
-                    </div>
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button class="btn btn-outline-secondary btn-sm" onclick="adminResetSearch()">
-                            <i class="fas fa-undo"></i> 重置
-                        </button>
-                        <button class="btn btn-primary btn-sm" onclick="adminSearchBooks()">
-                            <i class="fas fa-search"></i> 搜索
-                        </button>
-                    </div>
-                    <hr>
-                    <p class="small-muted mb-1">
-                        “管理员视图”中可以查看所有历史记录、读者的借阅情况等
-                    </p>
-                </div>
-            </div>
-
         </div>
 
-        <!-- 右侧：主内容区域（读者视图 / 管理员视图） -->
-        <div class="col-lg-8">
-
-            <!-- 读者视图 -->
-            <div id="view-reader">
-                <!-- 图书列表 -->
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-book me-2"></i> 图书列表
-                            <span class="small-muted" id="reader-book-count"></span>
-                        </span>
-                        <button class="btn btn-outline-success btn-sm" onclick="readerLoadAllBooks()">
-                            <i class="fas fa-sync-alt"></i> 刷新
-                        </button>
-                    </div>
-                    <div class="card-body position-relative">
-                        <div id="reader-loading" class="loading-overlay">
-                            <div class="spinner-border text-primary" role="status"></div>
-                        </div>
-                        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>书名</th>
-                                    <th>作者</th>
-                                    <th>库存</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                                </thead>
-                                <tbody id="reader-books-tbody">
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        暂无数据，请点击右上角“刷新”或使用左侧搜索。
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+        <!-- 管理员视图 -->
+        <div class="tab-pane fade" id="view-admin">
+            <div class="row g-4">
+                <!-- 快捷操作区 -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body d-flex gap-3 flex-wrap">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+                                <i class="fas fa-plus-circle me-2"></i>添加图书
+                            </button>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addReaderModal">
+                                <i class="fas fa-user-plus me-2"></i>添加读者
+                            </button>
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#readerListModal" onclick="openReaderList()">
+                                <i class="fas fa-users me-2"></i> 读者名录
+                            </button>
+                            <button class="btn btn-warning" onclick="genDemo(20)">
+                                <i class="fas fa-dice me-2"></i> 生成演示数据
+                            </button>
+                            <button class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#statsModal" onclick="loadStatsFront()">
+                                <i class="fas fa-chart-column me-2"></i> 统计概览
+                            </button>
+                            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importBooksModal">
+                                <i class="fas fa-file-import me-2"></i> 导入图书CSV
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="exportBooksCSV()">
+                                <i class="fas fa-file-export me-2"></i> 导出图书CSV
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="exportHistoryCSV()">
+                                <i class="fas fa-file-export me-2"></i> 导出历史CSV
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 读者：我的借阅结果(纯前端ing) -->
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <i class="fas fa-list me-2"></i> 我的借阅记录
+                <!-- 图书管理 -->
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-boxes me-2"></i>库存管理</span>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadAllBooks('admin')">刷新</button>
+                        </div>
+                        <div class="card-body p-0 position-relative">
+                            <div id="loading-admin-books" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>书名</th>
+                                        <th>借出/总数</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="admin-books-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p class="small-muted mb-2">
-                            展示：
-                            <br>· 当前借了哪些书
-                            <br>· 每本书的借阅时间 / 应还时间 / 当前状态
-                        </p>
-                        <div id="reader-borrowed-list" class="small text-muted">
-                            尚未接入后端 API
+                </div>
+
+                <!-- 历史记录 -->
+                <div class="col-lg-5">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-history me-2"></i>全馆借阅记录</span>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">刷新</button>
+                        </div>
+                        <div class="card-body p-0 position-relative">
+                            <div id="loading-history" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-sm table-hover align-middle mb-0 small">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>读者</th>
+                                        <th>图书</th>
+                                        <th>状态</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="admin-history-tbody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- 管理员视图 -->
-            <div id="view-admin" class="d-none">
-
-                <!-- 管理员：图书列表 -->
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-book me-2"></i> 图书列表（管理员）
-                            <span class="small-muted" id="admin-book-count"></span>
-                        </span>
-                        <button class="btn btn-outline-success btn-sm" onclick="adminLoadAllBooks()">
-                            <i class="fas fa-sync-alt"></i> 刷新
-                        </button>
-                    </div>
-                    <div class="card-body position-relative">
-                        <div id="admin-loading-books" class="loading-overlay">
-                            <div class="spinner-border text-primary" role="status"></div>
-                        </div>
-                        <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>书名</th>
-                                    <th>作者</th>
-                                    <th>库存</th>
-                                    <th>借出数量</th>
-                                    <th>分类</th>
-                                    <th>状态</th>
-                                </tr>
-                                </thead>
-                                <tbody id="admin-books-tbody">
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
-                                        暂无数据，请点击右上角“刷新”或使用左侧搜索。
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 管理员：历史记录 -->
-                <div class="card mt-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-history me-2"></i> 借还书历史记录
-                        </span>
-                        <button class="btn btn-outline-success btn-sm" onclick="adminLoadHistory()">
-                            <i class="fas fa-sync-alt"></i> 刷新
-                        </button>
-                    </div>
-                    <div class="card-body position-relative">
-                        <div id="admin-loading-history" class="loading-overlay">
-                            <div class="spinner-border text-primary" role="status"></div>
-                        </div>
-                        <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>记录ID</th>
-                                    <th>读者</th>
-                                    <th>图书</th>
-                                    <th>状态备注</th>
-                                    <th>时间信息</th>
-                                </tr>
-                                </thead>
-                                <tbody id="admin-history-tbody">
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        暂无数据，请点击上方“刷新”。
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="small-muted mt-2 mb-0">
-                            按读者查看借阅情况、按图书查看借阅人列表等
-                        </p>
-                    </div>
-                </div>
-
+        </div>
+    </div>
+</div>
+<!-- 模态框：导入CSV -->
+<div class="modal fade" id="importBooksModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">导入图书 CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
+            <div class="modal-body">
+                <div class="mb-2 small text-muted">
+                    CSV 列头示例：name,author,press,total,category（可选 id）
+                </div>
+                <input type="file" id="import-file" class="form-control" accept=".csv">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary w-100" onclick="importBooksCSV()">上传并导入</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 模态框：读者名录 -->
+<div class="modal fade" id="readerListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">读者名录</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-2">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input class="form-control" id="reader-list-search" placeholder="搜索姓名或ID，回车查找">
+                    <button class="btn btn-outline-secondary" onclick="openReaderList()">刷新</button>
+                </div>
+                <div class="table-responsive" style="max-height: 420px; overflow-y:auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr><th>ID</th><th>姓名</th><th>在借</th><th>操作</th></tr>
+                        </thead>
+                        <tbody id="reader-list-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 模态框：通用详情 -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalTitle">详情</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center g-3 mb-3" id="detailSummary"></div>
+                <div class="table-responsive" style="max-height: 450px; overflow-y:auto;">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr id="detailHeadRow"></tr>
+                        </thead>
+                        <tbody id="detailBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" id="detailRefreshBtn" style="display:none">刷新</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 模态框：添加图书 -->
+<div class="modal fade" id="addBookModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新书入库</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBookForm">
+                    <div class="mb-3"><label>书名</label><input type="text" id="add-name" class="form-control" required></div>
+                    <div class="mb-3"><label>作者</label><input type="text" id="add-author" class="form-control" required></div>
+                    <div class="row">
+                        <div class="col-6 mb-3"><label>库存</label><input type="number" id="add-total" class="form-control" value="10"></div>
+                        <div class="col-6 mb-3"><label>分类</label>
+                            <select id="add-category" class="form-select">
+                                <option>计算机</option><option>文学</option><option>历史</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3"><label>出版社</label><input type="text" id="add-press" class="form-control" value="默认出版社"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="submitAddBook()">确认添加</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- 依赖脚本 -->
+<!-- 模态框：添加读者 -->
+<div class="modal fade" id="addReaderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">注册新读者</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">读者姓名</label>
+                    <input type="text" id="new-reader-name" class="form-control" placeholder="输入真实姓名">
+                </div>
+                <div class="alert alert-light border small text-muted">
+                    <i class="fas fa-info-circle me-1"></i> 系统将自动生成6位数字ID，默认密码为 123456
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success w-100" onclick="submitAddReader()">确认注册</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 模态框：编辑图书 -->
+<div class="modal fade" id="editBookModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑图书</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label class="form-label">图书ID</label>
+                    <input type="text" id="edit-id" class="form-control" readonly>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">书名</label>
+                    <input type="text" id="edit-name" class="form-control">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">作者</label>
+                    <input type="text" id="edit-author" class="form-control">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">出版社</label>
+                    <input type="text" id="edit-press" class="form-control">
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label class="form-label">总册数</label>
+                        <input type="number" id="edit-total" class="form-control" min="0">
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label">分类</label>
+                        <input type="text" id="edit-category" class="form-control">
+                    </div>
+                </div>
+                <div class="small text-muted">提示：总册数不能小于已借出册数</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary w-100" onclick="submitUpdateBook()">保存修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 模态框：统计概览 -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">统计概览</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center mb-3">
+                    <div class="col-6 col-md-3">
+                        <div class="fw-bold fs-4" id="stats-total-books">-</div>
+                        <div class="text-muted small">书目数</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="fw-bold fs-4" id="stats-total-copies">-</div>
+                        <div class="text-muted small">总册数</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="fw-bold fs-4" id="stats-borrowed-copies">-</div>
+                        <div class="text-muted small">在借册数</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="fw-bold fs-4" id="stats-available-copies">-</div>
+                        <div class="text-muted small">可借册数</div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">按分类统计</div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="stats-by-category"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">借出最多 TOP 5</div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="stats-top-borrowed"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" onclick="loadStatsFront()">刷新统计</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let currentRole = 'reader'; // 'reader' or 'admin'
+    // ================= 全局 & 主题设置 =================
+    const darkModeSwitch = document.getElementById('darkModeSwitch');
+    darkModeSwitch.addEventListener('change', () => {
+        const theme = darkModeSwitch.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        document.getElementById('theme-text').textContent = darkModeSwitch.checked ? '深色模式' : '浅色模式';
+    });
 
-    function switchToReader() {
-        currentRole = 'reader';
-        document.getElementById('view-reader').classList.remove('d-none');
-        document.getElementById('view-admin').classList.add('d-none');
-        document.getElementById('card-reader-search').classList.remove('d-none');
-        document.getElementById('card-reader-myinfo').classList.remove('d-none');
-        document.getElementById('card-admin-filter').classList.add('d-none');
-
-        document.getElementById('btn-role-reader').classList.replace('btn-outline-secondary', 'btn-outline-primary');
-        document.getElementById('btn-role-reader').classList.add('active');
-        document.getElementById('btn-role-admin').classList.remove('active');
-        document.getElementById('btn-role-admin').classList.replace('btn-outline-primary', 'btn-outline-secondary');
-
-        const badge = document.getElementById('current-role-badge');
-        badge.className = 'role-badge reader';
-        badge.innerHTML = '<i class="fas fa-user"></i> 当前身份：读者';
+    function normalizeStatus(s = '') {
+        s = (s || '').trim();
+        // 兼容你旧的中文状态
+        if (s === '借出') return 'BORROWED';
+        if (s === '已还' || s === '已归还') return 'RETURNED';
+        if (s === '已拒绝') return 'REJECTED';
+        return s; // 如果本来就是 BORROWED/RETURNED 之类，直接返回
     }
 
-    function switchToAdmin() {
-        currentRole = 'admin';
-        document.getElementById('view-reader').classList.add('d-none');
-        document.getElementById('view-admin').classList.remove('d-none');
-        document.getElementById('card-reader-search').classList.add('d-none');
-        document.getElementById('card-reader-myinfo').classList.add('d-none');
-        document.getElementById('card-admin-filter').classList.remove('d-none');
-
-        document.getElementById('btn-role-admin').classList.replace('btn-outline-secondary', 'btn-outline-primary');
-        document.getElementById('btn-role-admin').classList.add('active');
-        document.getElementById('btn-role-reader').classList.remove('active');
-        document.getElementById('btn-role-reader').classList.replace('btn-outline-primary', 'btn-outline-secondary');
-
-        const badge = document.getElementById('current-role-badge');
-        badge.className = 'role-badge admin';
-        badge.innerHTML = '<i class="fas fa-user-shield"></i> 当前身份：管理员';
+    function statusText(s) {
+        const code = normalizeStatus(s);
+        const m = {
+            "BORROWED": "借出",
+            "RETURNED": "已归还",
+            "REJECTED": "已拒绝"
+        };
+        return m[code] || s;
     }
 
-    document.getElementById('btn-role-reader').addEventListener('click', switchToReader);
-    document.getElementById('btn-role-admin').addEventListener('click', switchToAdmin);
+    function statusBadgeClass(s) {
+        const code = normalizeStatus(s);
+        if (code === "RETURNED") return "bg-secondary";
+        if (code === "BORROWED") return "bg-success";
+        if (code === "REJECTED") return "bg-danger";
+        return "bg-light text-dark border";
+    }
+
+    // 错误码 -> 中文提示（与后端 main.cpp 一致）
+    const ERROR_TEXTS = {
+        OK: '操作成功',
+        ERR_PARAM: '参数不足',
+        ERR_READER_NOT_FOUND: '读者不存在',
+        ERR_BOOK_NOT_FOUND: '图书不存在',
+        ERR_NO_STOCK: '库存不足，无法借阅',
+        ERR_TOTAL_LT_BORROWED: '总册数不能小于已借出册数',
+        ERR_READER_EXISTS: '读者ID已存在',
+        ERR_BOOK_ID_EXISTS: '图书编号已存在',
+        ERR_READERLS_WRITE_FAIL: '保存读者数据失败',
+        ERR_BOOKLS_WRITE_FAIL: '保存图书数据失败',
+        ERR_HISTORYLS_WRITE_FAIL: '保存借阅历史失败',
+        ERR_NOT_BORROWED_OR_ALREADY_RETURNED: '该书未借阅或已归还',
+        ERR_UNKNOWN_CMD: '未知命令',
+        ERR_CPP_INTERNAL: '后端内部错误',
+        ERR_REACH_LIMIT: '已达借阅上限，无法继续借阅',
+        ERR_BOOK_IN_USE: '该书仍有在借，无法删除',
+        UNKNOWN: '未知错误'
+    };
+
+    function codeMsg(code) {
+        return ERROR_TEXTS[code] || code || '未知错误';
+    }
+
+    // JS 字符串注入安全（避免书名含引号导致 onclick 语法错误）
+    function jsStr(s) {
+        return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function switchRole(role) {
+        document.getElementById('page-title').textContent = role === 'reader' ? '读者大厅' : '管理后台';
+        if (role === 'reader') loadAllBooks('reader');
+        if (role === 'admin') {
+            loadAllBooks('admin');
+            loadHistory();
+        }
+    }
+
+    // 获取当前输入的读者ID
+    function getReaderId() {
+        return document.getElementById('current-reader-id').value.trim();
+    }
+
+    // ================ 通用请求封装（带超时 + 错误处理） =================
+    async function fetchJSON(url, options = {}, timeout = 15000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        try {
+            const res = await fetch(url, {...options, signal: controller.signal});
+            // 网络层错误
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            return data;
+        } finally {
+            clearTimeout(id);
+        }
+    }
+    //导入/导出、分类筛选与后端随机生成
+    async function importBooksCSV() {
+        const f = document.getElementById('import-file').files[0];
+        if (!f) return alert('请先选择CSV文件');
+        const fd = new FormData();
+        fd.append('file', f);
+        try {
+            const res = await fetch('/api/import_books', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.status === 'success') {
+                alert(`导入完成：成功 ${data.ok} 条，失败 ${data.fail} 条`);
+                bootstrap.Modal.getInstance(document.getElementById('importBooksModal')).hide();
+                loadAllBooks('admin');
+            } else {
+                alert('导入失败：' + (data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert('导入异常：' + (e.message || e));
+        }
+    }
+    function exportBooksCSV(){ window.location.href = '/api/export_books'; }
+    function exportHistoryCSV(){ window.location.href = '/api/export_history'; }
+
+    // 后端随机生成（替代或补充你现有的前端版）
+    async function genDemo(n = 20) {
+        if (!confirm(`将自动生成 ${n} 本随机图书，确认继续？`)) return;
+        try {
+            const data = await fetchJSON('/api/gen_demo', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({n})
+            });
+            if (data.status === 'success') {
+                alert(`生成完成：成功 ${data.made} 本`);
+                loadAllBooks('admin');
+            } else {
+                alert('生成失败：' + (data.message || 'UNKNOWN'));
+            }
+        } catch(e){ alert('请求错误：' + (e.message || e)); }
+    }
+
+    // 分类筛选
+    function fillReaderCategoryOptions(books) {
+        const sel = document.getElementById('reader-cat');
+        const set = new Set();
+        (books || []).forEach(b => set.add((b.category || '未分类').trim()));
+        const now = sel.value;
+        sel.innerHTML = '<option value="">全部分类</option>' + [...set].sort().map(c=>`<option>${c}</option>`).join('');
+        // 尽量保留当前选择
+        if ([...set].includes(now)) sel.value = now;
+    }
+
+    function applyReaderFilter(list) {
+        const cat = document.getElementById('reader-cat').value.trim();
+        const only = document.getElementById('reader-only-avail').checked;
+        let arr = list || [];
+        if (cat) arr = arr.filter(b => (b.category || '未分类').trim() === cat);
+        if (only) {
+            arr = arr.filter(b => (Number(b.total)||0) > (Number(b.borrowed)||0));
+        }
+        return arr;
+    }
+
+    function applyReaderFilterAndRender() {
+        const tbody = document.getElementById('reader-books-tbody');
+        const books = BOOKS_CACHE_FOR_READER || [];
+        const filtered = applyReaderFilter(books);
+        renderReaderBooks(filtered);
+    }
+
+    // ================= API 交互逻辑 =================
+
+    // 1. 获取图书列表（可选 keyword）
+    async function loadAllBooks(viewType, keyword = '') {
+        const loadingId = viewType === 'reader' ? 'loading-reader-books' : 'loading-admin-books';
+        document.getElementById(loadingId).style.display = 'flex';
+
+        try {
+            const url = keyword ? '/api/books/search?q=' + encodeURIComponent(keyword) : '/api/get_books';
+            const data = await fetchJSON(url);
+            if (data.status === 'success') {
+                if (viewType === 'reader') {
+                    BOOKS_CACHE_FOR_READER = data.data || [];
+                    fillReaderCategoryOptions(BOOKS_CACHE_FOR_READER);
+                    renderReaderBooks(applyReaderFilter(BOOKS_CACHE_FOR_READER));
+                } else {
+                    renderAdminBooks(data.data || []);
+                }
+            } else {
+                alert(codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('获取图书失败：' + (e.message || e));
+        } finally {
+            document.getElementById(loadingId).style.display = 'none';
+        }
+    }
+
+    // 搜索（读者视图）
+    function searchBooks(viewType) {
+        if (viewType !== 'reader') return;
+        const q = document.getElementById('reader-search').value.trim();
+        loadAllBooks('reader', q);
+    }
+
+    // 2. 读者借书
+    async function borrowBook(bookId, bookName) {
+        const rid = getReaderId();
+        if (!rid) {
+            alert("请先在左侧输入您的读者ID！");
+            document.getElementById('current-reader-id').focus();
+            return;
+        }
+        if (!confirm(`确认使用读者ID [${rid}] 借阅 《${bookName}》 吗？`)) return;
+
+        try {
+            const data = await fetchJSON('/api/borrow', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({reader_id: rid, book_id: bookId})
+            });
+            if (data.status === 'success') {
+                alert("借阅成功！");
+                loadAllBooks('reader'); // 刷新库存
+                loadMyInfo(); // 刷新我的借阅
+            } else {
+                alert("失败：" + codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert("请求错误：" + (e.message || e));
+        }
+    }
+
+    // 3. 读者还书
+    async function returnBook(bookId) {
+        const rid = getReaderId();
+        if (!rid) return alert("缺少读者ID");
+        if (!confirm("确认归还这本书吗？")) return;
+
+        try {
+            const data = await fetchJSON('/api/return', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({reader_id: rid, book_id: bookId})
+            });
+            if (data.status === 'success') {
+                alert("归还成功！");
+                loadMyInfo(); // 刷新列表
+                loadAllBooks('reader');
+            }
+            else {
+                alert("归还失败：" + codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert("请求错误：" + (e.message || e));
+        }
+    }
+
+    // 4. 获取“我的借阅”
+    async function loadMyInfo() {
+        const rid = getReaderId();
+        if (!rid) {
+            alert('请先输入读者ID');
+            return;
+        }
+
+        document.getElementById('reader-status-area').classList.remove('d-none');
+        document.getElementById('loading-my-books').style.display = 'flex';
+
+        const list = document.getElementById('my-borrowed-list');
+        list.innerHTML = '查询失败，请稍后再试';
 
 
+        try {
+            const data = await fetchJSON(`/api/reader/history?id=${encodeURIComponent(rid)}`);
+
+            if (data.status === 'success' && Array.isArray(data.data)) {
+                const items = (data.data || []).slice().reverse(); // 最新在前
+
+                if (items.length === 0) {
+                    list.innerHTML = '<li class="list-group-item text-center text-muted">暂无记录</li>';
+                    return;
+                }
+
+                items.forEach(item => {
+                    const code = normalizeStatus(item.status);
+                    const text = statusText(code);
+
+                    const isBorrowing = (code === 'BORROWED');
+                    const badgeHtml = `<span class="badge ${statusBadgeClass(code)}">${text}</span>`;
+
+                    const btnHtml = isBorrowing
+                        ? `<button class="btn btn-sm btn-outline-success" onclick="returnBook('${item.bid}')">归还</button>`
+                        : `<button class="btn btn-sm btn-outline-secondary" disabled>${text}</button>`;
+
+                    list.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">${item.bname}</div>
+                            <div class="small text-muted">书号: ${item.bid}</div>
+                            ${badgeHtml}
+                        </div>
+                        ${btnHtml}
+                    </li>
+                `;
+                });
+            } else {
+                list.innerHTML = '<li class="list-group-item text-danger">未找到该读者记录或ID错误</li>';
+                if (data.message) alert(codeMsg(data.message));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('查询失败：' + (e.message || e));
+            list.innerHTML = '<li class="list-group-item text危险">查询失败，请稍后再试</li>';
+        } finally {
+            document.getElementById('loading-my-books').style.display = 'none';
+        }
+    }
+
+
+    // 5. 添加读者 (管理员)
+    async function submitAddReader() {
+        const name = document.getElementById('new-reader-name').value.trim();
+        if (!name) return alert("请输入姓名");
+
+        try {
+            const data = await fetchJSON('/api/add_reader', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name})
+            });
+            if (data.status === 'success') {
+                alert(data.message || '添加成功');
+                bootstrap.Modal.getInstance(document.getElementById('addReaderModal')).hide();
+            } else {
+                alert(codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert('添加失败：' + (e.message || e));
+        }
+    }
+
+
+
+    // 6. 添加图书 (管理员)
+    async function submitAddBook() {
+        const payload = {
+            name: document.getElementById('add-name').value.trim(),
+            author: document.getElementById('add-author').value.trim(),
+            press: document.getElementById('add-press').value.trim(),
+            total: document.getElementById('add-total').value,
+            category: document.getElementById('add-category').value
+        };
+        if (!payload.name || !payload.author) {
+            return alert('请填写必填项');
+        }
+
+        try {
+            const data = await fetchJSON('/api/add_book', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (data.status === 'success') {
+                alert("添加成功");
+                bootstrap.Modal.getInstance(document.getElementById('addBookModal')).hide();
+                loadAllBooks('admin');
+            } else {
+                alert(codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert('添加失败：' + (e.message || e));
+        }
+    }
+
+    // 7. 管理员查看历史
+    async function loadHistory() {
+        document.getElementById('loading-history').style.display = 'flex';
+        try {
+            const data = await fetchJSON('/api/history');
+            const tbody = document.getElementById('admin-history-tbody');
+            tbody.innerHTML = '';
+            if (data.status === 'success' && Array.isArray(data.data)) {
+                data.data.forEach(h => {
+                    const code = normalizeStatus(h.status);
+                    const text = statusText(code);
+                    const badgeClass = statusBadgeClass(code);
+                    tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${h.rname}</div>
+                        <div class="small text-muted">${h.rid}</div>
+                    </td>
+                <td>
+                    <div class="fw-bold">${h.bname}</div>
+                    <div class="small text-muted">${h.bid}</div>
+                </td>
+                <td><span class="badge ${badgeClass}">${text}</span></td>
+            </tr>
+        `;
+                });
+            } else {
+                alert(codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert('读取历史失败：' + (e.message || e));
+        } finally {
+            document.getElementById('loading-history').style.display = 'none';
+        }
+    }
+
+    // ================= 渲染辅助函数 =================
     function renderReaderBooks(books) {
         const tbody = document.getElementById('reader-books-tbody');
-        const countSpan = document.getElementById('reader-book-count');
-        countSpan.textContent = `共 ${books.length} 本`;
+        tbody.innerHTML = '';
+        books.forEach(b => {
+            const total = Number(b.total) || 0;
+            const borrowed = Number(b.borrowed) || 0;
+            const remain = Math.max(total - borrowed, 0);
+            const available = remain > 0;
 
-        if (!books.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">未找到图书</td></tr>';
-            return;
-        }
+            // 避免书名含引号导致 onclick 语法错误
+            const safeName = String(b.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
-        let html = '';
-        books.forEach((b, idx) => {
-            const canBorrow = (b.status && b.status.indexOf('可借') !== -1) || (b.total - b.borrowed > 0);
-            const statusBadge = canBorrow
-                ? '<span class="badge bg-success">可借</span>'
-                : '<span class="badge bg-secondary">不可借</span>';
+            const btnHtml = available
+                ? `<button class="btn btn-sm btn-primary" onclick="borrowBook('${b.id}', '${safeName}')">借阅</button>`
+                : `<button class="btn btn-sm btn-secondary" disabled>无货</button>`;
 
-            html += `
+            tbody.innerHTML += `
                 <tr>
-                    <td>${idx + 1}</td>
-                    <td>${b.name}</td>
-                    <td>${b.author}</td>
-                    <td>${b.total - b.borrowed}/${b.total}</td>
-                    <td>${statusBadge}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary" ${canBorrow ? '' : 'disabled'}
-                                onclick="readerRequestBorrow('${b.id}')">
-                            借书申请
-                        </button>
+                        <div class="fw-bold">${b.name}</div>
+                        <div class="small text-muted">${b.category || ''}</div>
                     </td>
+                    <td>${b.author || ''}</td>
+                    <td>${remain} / ${total}</td>
+                    <td>${available ? '<span class="text-success fw-bold">● 可借</span>' : '<span class="text-secondary">● 借完</span>'}</td>
+                    <td class="text-end">${btnHtml}</td>
                 </tr>
             `;
         });
-        tbody.innerHTML = html;
+    }
+    // 打开编辑弹窗
+    function openEditBook(id) {
+        const b = (BOOKS_CACHE || []).find(x => String(x.id) === String(id));
+        if (!b) return alert('未找到该图书');
+        document.getElementById('edit-id').value = b.id;
+        document.getElementById('edit-name').value = b.name || '';
+        document.getElementById('edit-author').value = b.author || '';
+        document.getElementById('edit-press').value = b.press || '';
+        document.getElementById('edit-total').value = Number(b.total) || 0;
+        document.getElementById('edit-category').value = b.category || '';
+        new bootstrap.Modal(document.getElementById('editBookModal')).show();
     }
 
-    function renderAdminBooks(books) {
-        const tbody = document.getElementById('admin-books-tbody');
-        const countSpan = document.getElementById('admin-book-count');
-        countSpan.textContent = `共 ${books.length} 本`;
+    // 提交修改图书
+    async function submitUpdateBook() {
+        const payload = {
+            id: document.getElementById('edit-id').value.trim(),
+            name: document.getElementById('edit-name').value.trim(),
+            author: document.getElementById('edit-author').value.trim(),
+            press: document.getElementById('edit-press').value.trim(),
+            total: Number(document.getElementById('edit-total').value),
+            category: document.getElementById('edit-category').value.trim()
+        };
+        if (!payload.id || !payload.name || !payload.author) {
+            return alert('请完整填写内容');
+        }
+        try {
+            const res = await fetch('/api/update_book', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                alert('修改成功');
+                bootstrap.Modal.getInstance(document.getElementById('editBookModal')).hide();
+                loadAllBooks('admin');
+            } else {
+                alert('修改失败：' + codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert('请求错误：' + (e.message || e));
+        }
+    }
 
-        if (!books.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">未找到图书</td></tr>';
+    // 删除图书
+    async function deleteBook(id) {
+        if (!confirm(`确认删除图书 [${id}] 吗？该操作不可撤销`)) return;
+        try {
+            const res = await fetch(`/api/books/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.status === 'success') {
+                alert('已删除');
+                loadAllBooks('admin');
+            } else {
+                alert('删除失败：' + codeMsg(data.message || 'UNKNOWN'));
+            }
+        } catch (e) {
+            alert('请求错误：' + (e.message || e));
+        }
+    }
+
+
+    // 统计（前端聚合书目数据）
+    async function loadStatsFront() {
+        // 确保有数据
+        if (!BOOKS_CACHE || BOOKS_CACHE.length === 0) {
+            try {
+                const data = await fetchJSON('/api/get_books');
+                if (data.status === 'success') BOOKS_CACHE = data.data || [];
+            } catch (e) {}
+        }
+        const books = BOOKS_CACHE || [];
+        const totalBooks = books.length;
+        const totalCopies = books.reduce((s,b)=>s+(Number(b.total)||0),0);
+        const borrowedCopies = books.reduce((s,b)=>s+(Number(b.borrowed)||0),0);
+        const availableCopies = Math.max(totalCopies - borrowedCopies, 0);
+
+        document.getElementById('stats-total-books').textContent = totalBooks;
+        document.getElementById('stats-total-copies').textContent = totalCopies;
+        document.getElementById('stats-borrowed-copies').textContent = borrowedCopies;
+        document.getElementById('stats-available-copies').textContent = availableCopies;
+
+        // 分类聚合
+        const byCatMap = {};
+        books.forEach(b=>{
+            const c = (b.category || '未分类').trim();
+            if (!byCatMap[c]) byCatMap[c] = {books:0, copies:0};
+            byCatMap[c].books += 1;
+            byCatMap[c].copies += Number(b.total)||0;
+        });
+        const byCat = Object.entries(byCatMap).map(([k,v])=>({category:k, ...v})).sort((a,b)=>b.copies-a.copies);
+        const ulCat = document.getElementById('stats-by-category');
+        ulCat.innerHTML = byCat.map(x=>`<li class="list-group-item d-flex justify-content-between"><span>${x.category}</span><span class="text-muted">${x.books} 本 / ${x.copies} 册</span></li>`).join('') || '<li class="list-group-item text-muted">暂无</li>';
+
+        // TOP 5
+        const top = books.slice().sort((a,b)=>(Number(b.borrowed)||0)-(Number(a.borrowed)||0)).slice(0,5);
+        const ulTop = document.getElementById('stats-top-borrowed');
+        ulTop.innerHTML = top.map(t=>`<li class="list-group-item d-flex justify-content-between"><span>${t.name}</span><span class="text-muted">${Number(t.borrowed)||0} / ${Number(t.total)||0}</span></li>`).join('') || '<li class="list-group-item text-muted">暂无</li>';
+    }
+
+    let BOOKS_CACHE = [];
+    let BOOKS_CACHE_FOR_READER = [];
+    let READERS_CACHE = [];
+    let DETAIL_CTX = null;
+    function renderAdminBooks(books) {
+        BOOKS_CACHE = Array.isArray(books) ? books : [];
+        const tbody = document.getElementById('admin-books-tbody');
+        tbody.innerHTML = '';
+        BOOKS_CACHE.forEach(b => {
+        const total = Number(b.total) || 0;
+        const borrowed = Number(b.borrowed) || 0;
+        const remain = Math.max(total - borrowed, 0);
+        const statusHtml = remain > 0 ? '<span class="text-success fw-bold">● 可借</span>' : '<span class="text-secondary">● 借完</span>';
+        tbody.innerHTML += `
+            <tr>
+                <td><span class="font-monospace small">${b.id}</span></td>
+                <td>
+                    <div class="fw-bold">${b.name}</div>
+                    <div class="small text-muted">${b.author || ''}</div>
+                </td>
+                <td>${borrowed} / ${total}</td>
+                <td>${statusHtml}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="openBookDetail('${b.id}', '${jsStr(b.name)}')">查看</button>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="openEditBook('${b.id}')">编辑</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBook('${b.id}')">删除</button>
+                </td>
+            </tr>
+        `;
+    });
+    }
+
+    // 初始化
+    window.addEventListener('DOMContentLoaded', () => {
+        loadAllBooks('reader');
+        // 回车快捷键：ID 回车 -> 加载我的信息；搜索框回车 -> 搜索
+        document.getElementById('current-reader-id').addEventListener('keydown', e => {
+            if (e.key === 'Enter') loadMyInfo();
+        });
+        document.getElementById('reader-search').addEventListener('keydown', e => {
+            if (e.key === 'Enter') searchBooks('reader');
+        });
+    });
+    async function openReaderList() {
+        try {
+            const data = await fetchJSON('/api/readers');
+            if (data.status !== 'success') { alert(codeMsg(data.message||'UNKNOWN')); return; }
+            READERS_CACHE = data.data || [];
+            renderReaderList();
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('readerListModal'));
+            modal.show();
+        } catch(e){ alert('加载读者失败：' + (e.message||e)); }
+    }
+
+    function renderReaderList() {
+        const q = (document.getElementById('reader-list-search').value || '').trim();
+        const tbody = document.getElementById('reader-list-tbody');
+        let arr = READERS_CACHE.slice();
+        if (q) arr = arr.filter(x => (String(x.rid||'').includes(q) || String(x.rname||'').includes(q)));
+        tbody.innerHTML = '';
+        if (arr.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">暂无数据</td></tr>';
             return;
         }
-
-        let html = '';
-        books.forEach((b, idx) => {
-            html += `
-                <tr>
-                    <td>${idx + 1}</td>
-                    <td>${b.name}</td>
-                    <td>${b.author}</td>
-                    <td>${b.total}</td>
-                    <td>${b.borrowed}</td>
-                    <td>${b.category}</td>
-                    <td>${b.status}</td>
-                </tr>
-            `;
+        arr.forEach(r => {
+            tbody.innerHTML += `
+          <tr>
+            <td class="font-monospace small">${r.rid}</td>
+            <td>${r.rname || ''}</td>
+            <td>${r.active || 0}</td>
+            <td><button class="btn btn-sm btn-outline-secondary" onclick="openReaderDetail('${r.rid}','${jsStr(r.rname)}')">查看借阅</button></td>
+          </tr>
+        `;
         });
-        tbody.innerHTML = html;
     }
 
-    async function readerLoadAllBooks() {
-        const loading = document.getElementById('reader-loading');
-        loading.style.display = 'flex';
+    function renderDetailSummary(total, active, returned) {
+        const el = document.getElementById('detailSummary');
+        el.innerHTML = `
+      <div class="col-4"><div class="fw-bold fs-5">${total}</div><div class="text-muted small">总记录</div></div>
+      <div class="col-4"><div class="fw-bold fs-5 text-success">${active}</div><div class="text-muted small">在借</div></div>
+      <div class="col-4"><div class="fw-bold fs-5 text-secondary">${returned}</div><div class="text-muted small">已归还</div></div>
+    `;
+    }
+
+    async function openReaderDetail(rid, rname) {
+        DETAIL_CTX = {type:'reader', id: rid, name: rname};
+        document.getElementById('detailModalTitle').textContent = `读者明细 - ${rname} (${rid})`;
+        document.getElementById('detailHeadRow').innerHTML = `
+      <th>书名</th><th>书号</th><th>借出</th><th>归还</th><th>状态</th>
+    `;
+        document.getElementById('detailBody').innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">加载中...</td></tr>';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
+
         try {
-            const res = await fetch('/api/get_books');
-            const data = await res.json();
-            if (res.ok && data.status === 'success') {
-                renderReaderBooks(data.data || []);
-            } else {
-                alert('获取图书失败：' + (data.message || '未知错误'));
-            }
-        } catch (e) {
-            alert('请求失败：' + e);
-        } finally {
-            loading.style.display = 'none';
-        }
-    }
-
-    async function readerSearchBooks() {
-        const keyword = document.getElementById('reader-search-keyword').value.trim();
-        if (!keyword) {
-            // 没关键字就拉全部
-            return readerLoadAllBooks();
-        }
-        const loading = document.getElementById('reader-loading');
-        loading.style.display = 'flex';
-        try {
-            const res = await fetch('/api/books/search?q=' + encodeURIComponent(keyword));
-            const data = await res.json();
-            if (res.ok && data.status === 'success') {
-                renderReaderBooks(data.data || []);
-            } else {
-                alert('搜索失败：' + (data.message || '未知错误'));
-            }
-        } catch (e) {
-            alert('请求失败：' + e);
-        } finally {
-            loading.style.display = 'none';
-        }
-    }
-
-    function readerResetSearch() {
-        document.getElementById('reader-search-keyword').value = '';
-        readerLoadAllBooks();
-    }
-
-    function readerRequestBorrow(bid) {
-        const rid = document.getElementById('reader-id').value.trim();
-        if (!rid) {
-            return alert('请先在左侧“我的借阅”中填写你的读者编号 (RID)！');
-        }
-        // 这里先用 alert 模拟
-        alert('借书申请（预留）：读者 ' + rid + ' 申请借阅图书 ID=' + bid + '。\n\n你之后可以实现 /api/reader/borrow_request 之类的接口。');
-    }
-
-    function readerFetchBorrowed() {
-        const rid = document.getElementById('reader-id').value.trim();
-        if (!rid) {
-            return alert('请输入读者编号 (RID)');
-        }
-        alert('这里将来调用类似 GET /api/reader/' + rid + '/borrows 的接口，展示该读者当前的借阅信息。\n目前只是占位说明。');
-    }
-
-    async function adminLoadAllBooks() {
-        const loading = document.getElementById('admin-loading-books');
-        loading.style.display = 'flex';
-        try {
-            const res = await fetch('/api/get_books');
-            const data = await res.json();
-            if (res.ok && data.status === 'success') {
-                renderAdminBooks(data.data || []);
-            } else {
-                alert('获取图书失败：' + (data.message || '未知错误'));
-            }
-        } catch (e) {
-            alert('请求失败：' + e);
-        } finally {
-            loading.style.display = 'none';
-        }
-    }
-
-    async function adminSearchBooks() {
-        const keyword = document.getElementById('admin-search-keyword').value.trim();
-        if (!keyword) {
-            return adminLoadAllBooks();
-        }
-        const loading = document.getElementById('admin-loading-books');
-        loading.style.display = 'flex';
-        try {
-            const res = await fetch('/api/books/search?q=' + encodeURIComponent(keyword));
-            const data = await res.json();
-            if (res.ok && data.status === 'success') {
-                renderAdminBooks(data.data || []);
-            } else {
-                alert('搜索失败：' + (data.message || '未知错误'));
-            }
-        } catch (e) {
-            alert('请求失败：' + e);
-        } finally {
-            loading.style.display = 'none';
-        }
-    }
-
-    function adminResetSearch() {
-        document.getElementById('admin-search-keyword').value = '';
-        adminLoadAllBooks();
-    }
-
-    async function adminLoadHistory() {
-        const loading = document.getElementById('admin-loading-history');
-        loading.style.display = 'flex';
-        const tbody = document.getElementById('admin-history-tbody');
-        try {
-            const res = await fetch('/api/history');
-            const data = await res.json();
-            if (!(res.ok && data.status === 'success')) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">获取历史记录失败</td></tr>';
-                return;
-            }
-            const historys = data.data || [];
-            if (!historys.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">暂无历史记录</td></tr>';
-                return;
-            }
-            let html = '';
-            historys.forEach((h, idx) => {
-                const timeInfo = `
-                    借出申请: ${h.brtime || '-'}<br>
-                    借出时间: ${h.btime || '-'}<br>
-                    归还申请: ${h.rrtime || '-'}<br>
-                    实际归还: ${h.rtime || '-'}
-                `;
-                html += `
-                    <tr>
-                        <td>${idx + 1}</td>
-                        <td>${h.hid}</td>
-                        <td>${h.rname} (${h.rid})</td>
-                        <td>${h.bname} (${h.bid})</td>
-                        <td>${h.note || ''}</td>
-                        <td class="small">${timeInfo}</td>
-                    </tr>
-                `;
+            const data = await fetchJSON(`/api/reader/history?id=${encodeURIComponent(rid)}`);
+            if (data.status !== 'success') { alert(codeMsg(data.message||'UNKNOWN')); return; }
+            const list = (data.data || []).slice().reverse();
+            const tbody = document.getElementById('detailBody');
+            tbody.innerHTML = '';
+            let active = 0, returned = 0;
+            list.forEach(h => {
+                const code = normalizeStatus(h.status);
+                if (code === 'BORROWED') active++;
+                if (code === 'RETURNED') returned++;
+                tbody.innerHTML += `
+              <tr>
+                <td>${h.bname}</td>
+                <td class="font-monospace small">${h.bid}</td>
+                <td>${h.brtime || ''}</td>
+                <td>${h.rrtime || ''}</td>
+                <td><span class="badge ${statusBadgeClass(code)}">${statusText(code)}</span></td>
+              </tr>
+            `;
             });
-            tbody.innerHTML = html;
-        } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">请求失败：' + e + '</td></tr>';
-        } finally {
-            loading.style.display = 'none';
-        }
+            renderDetailSummary(list.length, active, returned);
+            const btn = document.getElementById('detailRefreshBtn');
+            btn.style.display = 'inline-block';
+            btn.onclick = () => openReaderDetail(rid, rname);
+        } catch(e){ alert('加载明细失败：' + (e.message||e)); }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        readerLoadAllBooks();
+    async function openBookDetail(bid, bname) {
+        DETAIL_CTX = {type:'book', id: bid, name: bname};
+        document.getElementById('detailModalTitle').textContent = `图书明细 - ${bname} (${bid})`;
+        document.getElementById('detailHeadRow').innerHTML = `
+      <th>读者</th><th>读者ID</th><th>借出</th><th>归还</th><th>状态</th>
+    `;
+        document.getElementById('detailBody').innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">加载中...</td></tr>';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
+
+        try {
+            const data = await fetchJSON(`/api/book/history?id=${encodeURIComponent(bid)}`);
+            if (data.status !== 'success') { alert(codeMsg(data.message||'UNKNOWN')); return; }
+            const list = (data.data || []).slice().reverse();
+            const tbody = document.getElementById('detailBody');
+            tbody.innerHTML = '';
+            let active = 0, returned = 0;
+            list.forEach(h => {
+                const code = normalizeStatus(h.status);
+                if (code === 'BORROWED') active++;
+                if (code === 'RETURNED') returned++;
+                tbody.innerHTML += `
+              <tr>
+                <td>${h.rname}</td>
+                <td class="font-monospace small">${h.rid}</td>
+                <td>${h.brtime || ''}</td>
+                <td>${h.rrtime || ''}</td>
+                <td><span class="badge ${statusBadgeClass(code)}">${statusText(code)}</span></td>
+              </tr>
+            `;
+            });
+            renderDetailSummary(list.length, active, returned);
+            const btn = document.getElementById('detailRefreshBtn');
+            btn.style.display = 'inline-block';
+            btn.onclick = () => openBookDetail(bid, bname);
+        } catch(e){ alert('加载明细失败：' + (e.message||e)); }
+    }
+
+    // 读者名录搜索框回车
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('reader-list-search');
+        if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') renderReaderList(); });
     });
 </script>
 </body>
